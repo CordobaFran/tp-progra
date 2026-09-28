@@ -4,7 +4,6 @@
 **/.angular/
 **/coverage/
 **/database/
-**/.vscode/
 **/.idea/
 **/*.tsbuildinfo
 **/*.log
