@@ -1692,19 +1692,52 @@ const groupDefinitions = [
 ];
 
 const rivals = [
-  ['captain-america', 'iron-man'],
-  ['hulk', 'wolverine'],
-  ['reed-richards', 'namor'],
-  ['thor', 'hercules'],
-  ['deadpool', 'punisher'],
-  ['cyclops', 'wolverine'],
-  ['black-panther', 'mbaku'],
-  ['gamora', 'nebula'],
-  ['daredevil', 'elektra'],
   ['spider-man', 'punisher'],
   ['doctor-strange', 'ghost-rider'],
+  ['thor', 'hercules'],
+  ['wolverine', 'cyclops'],
+  ['wolverine', 'hulk'],
+  ['wolverine', 'deadpool'],
+  ['reed-richards', 'namor'],
+  ['black-panther', 'mbaku'],
+  ['black-panther', 'namor'],
+  ['captain-marvel', 'rogue'],
+  ['ms-marvel', 'rogue'],
+  ['hulk', 'the-thing'],
+  ['vision', 'wonder-man'],
   ['hawkeye', 'deadpool'],
+  ['elektra', 'daredevil'],
+  ['daredevil', 'punisher'],
+  ['deadpool', 'punisher'],
+  ['gamora', 'nebula'],
+  ['human-torch', 'namor'],
+  ['invisible-woman', 'namor'],
+  ['shuri', 'namor'],
+  ['cable', 'bishop'],
+  ['blade', 'ghost-rider'],
+  ['luke-cage', 'punisher'],
+  ['squirrel-girl', 'deadpool'],
+  ['war-machine', 'punisher'],
 ];
+
+if (rivals.length !== 26) {
+  throw new Error(`Expected 26 unique RIVAL pairs, found ${rivals.length}.`);
+}
+const rosterIds = new Set(roster.map(([id]) => id));
+const rivalPairKeys = new Set();
+for (const [a, b] of rivals) {
+  if (!rosterIds.has(a) || !rosterIds.has(b)) {
+    throw new Error(`RIVAL pair ${a}/${b} references a Hero outside the public roster.`);
+  }
+  if (a === b) {
+    throw new Error(`Hero ${a} cannot be its own RIVAL.`);
+  }
+  const key = [a, b].sort().join('|');
+  if (rivalPairKeys.has(key)) {
+    throw new Error(`Duplicate unordered RIVAL pair ${a}/${b}.`);
+  }
+  rivalPairKeys.add(key);
+}
 
 const relationshipMap = new Map(
   roster.map(([id]) => [id, { allies: new Set(), rivals: new Set() }]),
@@ -1725,6 +1758,16 @@ for (const [a, b] of rivals) {
   relationshipMap.get(b).rivals.add(a);
   relationshipMap.get(a).allies.delete(b);
   relationshipMap.get(b).allies.delete(a);
+}
+for (const [heroId, relationships] of relationshipMap) {
+  for (const rivalId of relationships.rivals) {
+    if (!relationshipMap.get(rivalId).rivals.has(heroId)) {
+      throw new Error(`RIVAL pair ${heroId}/${rivalId} is not symmetric.`);
+    }
+    if (relationships.allies.has(rivalId)) {
+      throw new Error(`Hero pair ${heroId}/${rivalId} is both ALLY and RIVAL.`);
+    }
+  }
 }
 
 function hash(text) {
@@ -3717,15 +3760,90 @@ const leaderIds = roster
 if (leaderIds.length !== 37) {
   throw new Error(`Expected 37 leader-capable heroes, found ${leaderIds.length}.`);
 }
-const allIds = roster.map(([id]) => id);
-const teamRows = preferred.map(([leaderId, name], index) => {
-  const companions = [];
-  for (let offset = 1; companions.length < 5; offset += 1) {
-    const candidate = allIds[(index * 7 + offset * 11) % allIds.length];
-    if (candidate !== leaderId && !companions.includes(candidate)) {
-      companions.push(candidate);
+const assignedTeamCompanionIds = {
+  'spider-man': ['iron-man', 'punisher', 'scarlet-witch', 'doctor-strange', 'spider-woman'],
+  'doctor-strange': ['scarlet-witch', 'america-chavez', 'wiccan', 'ghost-rider', 'magik'],
+  'captain-america': ['falcon', 'winter-soldier', 'black-widow', 'hawkeye', 'thor'],
+  thor: ['sif', 'valkyrie', 'heimdall', 'korg', 'beta-ray-bill'],
+  'black-widow': ['hawkeye', 'winter-soldier', 'captain-america', 'falcon', 'spider-woman'],
+  wolverine: ['x-23', 'jean-grey', 'storm', 'nightcrawler', 'professor-x'],
+  'reed-richards': ['invisible-woman', 'human-torch', 'the-thing', 'moon-girl', 'devil-dinosaur'],
+  'iron-man': ['war-machine', 'rescue', 'vision', 'spider-man', 'captain-america'],
+  'black-panther': ['shuri', 'okoye', 'mbaku', 'storm', 'captain-america'],
+  'captain-marvel': ['monica-rambeau', 'adam-warlock', 'spider-woman', 'war-machine', 'nova'],
+  hulk: ['she-hulk', 'thor', 'hercules', 'iron-man', 'doctor-strange'],
+  'scarlet-witch': ['vision', 'quicksilver', 'wiccan', 'speed', 'doctor-strange'],
+  vision: ['scarlet-witch', 'wonder-man', 'iron-man', 'captain-america', 'wasp'],
+  hawkeye: ['black-widow', 'kate-bishop', 'captain-america', 'wasp', 'ant-man'],
+  wasp: ['ant-man', 'hawkeye', 'vision', 'ms-marvel', 'she-hulk'],
+  'ant-man': ['wasp', 'vision', 'iron-man', 'hawkeye', 'hulk'],
+  falcon: ['captain-america', 'winter-soldier', 'black-widow', 'war-machine', 'hawkeye'],
+  'winter-soldier': ['captain-america', 'falcon', 'black-widow', 'hawkeye', 'war-machine'],
+  elektra: ['daredevil', 'punisher', 'echo', 'iron-fist', 'blade'],
+  'spider-woman': ['captain-marvel', 'jessica-jones', 'black-widow', 'hawkeye', 'spider-man'],
+  daredevil: ['elektra', 'jessica-jones', 'luke-cage', 'iron-fist', 'punisher'],
+  deadpool: ['cable', 'wolverine', 'colossus', 'x-23', 'psylocke'],
+  punisher: ['daredevil', 'elektra', 'black-widow', 'winter-soldier', 'ghost-rider'],
+  'shang-chi': ['iron-fist', 'luke-cage', 'daredevil', 'spider-man', 'captain-america'],
+  storm: ['cyclops', 'wolverine', 'professor-x', 'gambit', 'rogue'],
+  cyclops: ['jean-grey', 'storm', 'colossus', 'jubilee', 'rogue'],
+  'jean-grey': ['cyclops', 'storm', 'wolverine', 'professor-x', 'iceman'],
+  'professor-x': ['cyclops', 'jean-grey', 'storm', 'wolverine', 'beast'],
+  'star-lord': ['gamora', 'rocket-raccoon', 'groot', 'drax', 'mantis'],
+  'rocket-raccoon': ['groot', 'star-lord', 'gamora', 'drax', 'mantis'],
+  gamora: ['star-lord', 'nebula', 'rocket-raccoon', 'groot', 'drax'],
+  'human-torch': ['reed-richards', 'invisible-woman', 'the-thing', 'spider-man', 'deadpool'],
+};
+
+const preferredIds = new Set(preferred.map(([id]) => id));
+const rosterEligibility = new Map(roster.map(([id, , eligibility]) => [id, eligibility]));
+const assignedLeaderIds = Object.keys(assignedTeamCompanionIds);
+for (const leaderId of preferredIds) {
+  if (!Object.hasOwn(assignedTeamCompanionIds, leaderId)) {
+    throw new Error(`Missing assigned Team definition for PREFERRED Leader ${leaderId}.`);
+  }
+}
+for (const leaderId of assignedLeaderIds) {
+  if (rosterEligibility.get(leaderId) !== 'PREFERRED') {
+    throw new Error(`Assigned Team Leader ${leaderId} does not exist as a PREFERRED Hero.`);
+  }
+}
+if (assignedLeaderIds.length !== 32) {
+  throw new Error(
+    `Expected 32 explicit PREFERRED Team definitions, found ${assignedLeaderIds.length}.`,
+  );
+}
+for (const leaderId of assignedLeaderIds) {
+  const companionIds = assignedTeamCompanionIds[leaderId];
+  if (!Array.isArray(companionIds) || companionIds.length !== 5) {
+    throw new Error(`Assigned Team ${leaderId} must have exactly five companions.`);
+  }
+  const seen = new Set();
+  for (const companionId of companionIds) {
+    if (companionId === leaderId) {
+      throw new Error(`Assigned Team ${leaderId} cannot include its Leader as a companion.`);
+    }
+    if (seen.has(companionId)) {
+      throw new Error(`Assigned Team ${leaderId} repeats companion ${companionId}.`);
+    }
+    seen.add(companionId);
+    const eligibility = rosterEligibility.get(companionId);
+    if (!eligibility) {
+      throw new Error(`Assigned Team ${leaderId} references unknown companion ${companionId}.`);
+    }
+    if (!['PREFERRED', 'ELIGIBLE', 'COMPANION_ONLY'].includes(eligibility)) {
+      throw new Error(
+        `Assigned Team ${leaderId} has ineligible companion ${companionId}: ${eligibility}.`,
+      );
     }
   }
+  if (![leaderId, ...companionIds].some((id) => relationshipMap.get(id).rivals.size > 0)) {
+    throw new Error(`Assigned Team ${leaderId} has no Hero with a RIVAL.`);
+  }
+}
+
+const teamRows = preferred.map(([leaderId, name]) => {
+  const companions = assignedTeamCompanionIds[leaderId];
   const metadata = {
     leaderId,
     companionIds: companions,

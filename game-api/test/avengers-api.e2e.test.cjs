@@ -160,6 +160,27 @@ test('production seed exposes exactly 87 typed selectable Heroes and three non-s
     ),
     false,
   );
+  const pairKey = (a, b) => [a, b].sort().join('|');
+  const persistedHeroes = JSON.parse(
+    execFileSync('sqlite3', [
+      '-json',
+      '-readonly',
+      process.env.DB_DATABASE,
+      'SELECT id, metadata FROM avengers_heroes;',
+    ]).toString(),
+  );
+  const persistedRivalPairs = new Set(
+    persistedHeroes.flatMap(({ id, metadata }) =>
+      JSON.parse(metadata).rivals.map((rivalId) => pairKey(id, rivalId)),
+    ),
+  );
+  const publicRivalPairs = relationships
+    .filter(({ relationshipCode }) => relationshipCode === 'RIVAL')
+    .map(({ heroAId, heroBId }) => pairKey(heroAId, heroBId));
+  assert.equal(publicRivalPairs.length, 26, 'public RIVAL pairs remain sparse');
+  assert.equal(new Set(publicRivalPairs).size, 26, 'each public RIVAL pair appears once');
+  assert.deepEqual(publicRivalPairs.sort(), [...persistedRivalPairs].sort());
+  assert.equal(publicRivalPairs.includes(pairKey('captain-america', 'iron-man')), false);
 });
 
 test('Journey simulates synchronously, persists PRE_FINAL, and Player reaches FinalStage as an ordinary finalist', async () => {
