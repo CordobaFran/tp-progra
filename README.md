@@ -66,7 +66,7 @@ Torneo Multiversal.
 
 ### Equipo asignado
 
-**TEAM_ID:** `[Completar con el ID del personaje asignado]`
+**TEAM_ID:** `hulk`
 
 El personaje asignado identifica al Team que utilizará el grupo durante todo el
 Trabajo Práctico.
