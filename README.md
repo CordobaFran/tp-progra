@@ -119,7 +119,7 @@ de los diez integrantes.
 | --: | ------------------------------------ | ---------------------------- | ------------- | --------------- |
 |   1 | `[Felipe Vallejo]`                     | R2 — Historia y Rivales      | Equipo        | Individual      |
 |   2 | `Agustín Tapia`                      | R3 — Configurar Equipo       | Equipo        | Individual      |
-|   3 | `[Completar]`                        | R5 — Fase de Grupos          | Camino        | Individual      |
+|   3 | `Ignacio Martin Roman`               | R5 — Fase de Grupos          | Camino        | Individual      |
 |   4 | `Leonardo Fleita`                    | R6 — Fase Eliminatoria       | Camino        | Individual      |
 |   5 | `[Completar]`                        | R7 — Camino del Equipo       | Camino        | Individual      |
 |   6 | `[Completar]`                        | R8 — Preparar Batalla Final  | Batalla Final | Individual      |
