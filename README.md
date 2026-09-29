@@ -115,22 +115,22 @@ desarrolla. Para R9, completen ese campo con quien coordinará el seguimiento
 (se recomienda al Tech Lead); la implementación sigue siendo responsabilidad
 de los diez integrantes.
 
-| # | Integrante | Funcionalidad | Sección | Responsabilidad |
-| ---: | --- | --- | --- | --- |
-| 1 | `Felipe Vallejo` | R2 — Historia y Rivales | Equipo | Individual |
-| 2 | `Agustín Tapia` | R3 — Configurar Equipo | Equipo | Individual |
-| 3 | `[Completar]` | R5 — Fase de Grupos | Camino | Individual |
-| 4 | `[Completar]` | R6 — Fase Eliminatoria | Camino | Individual |
-| 5 | `[Completar]` | R7 — Camino del Equipo | Camino | Individual |
-| 6 | `[Completar]` | R8 — Preparar Batalla Final | Batalla Final | Individual |
-| 7 | `[Completar; idealmente, Tech Lead]` | R9 — Batalla Final | Batalla Final | Grupal |
-| 8 | `Yani Emanuel Castillo` | R10 — Eventos en Vivo | Batalla Final | Individual |
-| 9 | `Manuel Augusto Álvarez` | R11 — Estado del Equipo | Batalla Final | Individual |
-| 10 | `[Completar]` | R12 — Estadísticas y Premios | Resultados | Individual |
-| 11 | `[Completar]` | R13 — Historial | Resultados | Individual |
+|   # | Integrante                           | Funcionalidad                | Sección       | Responsabilidad |
+| --: | ------------------------------------ | ---------------------------- | ------------- | --------------- |
+|   1 | `Felipe Vallejo`                     | R2 — Historia y Rivales      | Equipo        | Individual      |
+|   2 | `Agustín Tapia`                      | R3 — Configurar Equipo       | Equipo        | Individual      |
+|   3 | `[Completar]`                        | R5 — Fase de Grupos          | Camino        | Individual      |
+|   4 | `Leonardo Fleita`                    | R6 — Fase Eliminatoria       | Camino        | Individual      |
+|   5 | `[Completar]`                        | R7 — Camino del Equipo       | Camino        | Individual      |
+|   6 | `[Completar]`                        | R8 — Preparar Batalla Final  | Batalla Final | Individual      |
+|   7 | `[Completar; idealmente, Tech Lead]` | R9 — Batalla Final           | Batalla Final | Grupal          |
+|   8 | `Yani Emanuel Castillo`              | R10 — Eventos en Vivo        | Batalla Final | Individual      |
+|   9 | `Manuel Augusto Álvarez`             | R11 — Estado del Equipo      | Batalla Final | Individual      |
+|  10 | `[Completar]`                        | R12 — Estadísticas y Premios | Resultados    | Individual      |
+|  11 | `[Completar]`                        | R13 — Historial              | Resultados    | Individual      |
 
 > **R9 — Batalla Final es obligatoria para la aprobación del TP y responsabilidad
-del grupo completo.**
+> del grupo completo.**
 >
 > Los diez integrantes deben participar de su desarrollo además de completar su
 > funcionalidad individual. La Batalla Final debe poder jugarse de principio a
@@ -207,11 +207,11 @@ En total:
 
 ## Stack técnico
 
-| Capa | Tecnología | Puerto | URL base |
-| --- | --- | ---: | --- |
-| Frontend | Angular — `avengers-front` | `:3102` | `http://localhost:3102` |
-| Backend BFF | NestJS — `avengers-back` | `:4102` | `http://localhost:4102/gameCore` |
-| API | Avengers Game API — infraestructura externa de la cátedra | `:5102` | `http://localhost:5102/game` |
+| Capa        | Tecnología                                                |  Puerto | URL base                         |
+| ----------- | --------------------------------------------------------- | ------: | -------------------------------- |
+| Frontend    | Angular — `avengers-front`                                | `:3102` | `http://localhost:3102`          |
+| Backend BFF | NestJS — `avengers-back`                                  | `:4102` | `http://localhost:4102/gameCore` |
+| API         | Avengers Game API — infraestructura externa de la cátedra | `:5102` | `http://localhost:5102/game`     |
 
 > **Avengers Game API es provista por la cátedra, permanece fuera de `students/`
 > y no debe modificarse.**
@@ -369,4 +369,4 @@ controller → service
 
 ---
 
-*Programación III — UTN — 2026*
+_Programación III — UTN — 2026_
