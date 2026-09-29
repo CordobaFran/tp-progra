@@ -118,7 +118,7 @@ de los diez integrantes.
 | # | Integrante | Funcionalidad | Sección | Responsabilidad |
 | ---: | --- | --- | --- | --- |
 | 1 | `[Completar]` | R2 — Historia y Rivales | Equipo | Individual |
-| 2 | `[Completar]` | R3 — Configurar Equipo | Equipo | Individual |
+| 2 | `Agustín Tapia` | R3 — Configurar Equipo | Equipo | Individual |
 | 3 | `[Completar]` | R5 — Fase de Grupos | Camino | Individual |
 | 4 | `[Completar]` | R6 — Fase Eliminatoria | Camino | Individual |
 | 5 | `[Completar]` | R7 — Camino del Equipo | Camino | Individual |
