@@ -8,6 +8,7 @@ import {
   FinalRelationshipCatalogApi,
   FinalSimulateJourneyApi,
   FinalTeamConfigurationDataApi,
+  FinalSaveConfigurationApi,
 } from './model/game-api/final-contract.model';
 import { HeroCatalogApi, RelationshipCatalogApi } from './model/game-api/hero-catalog.model';
 import {
@@ -96,6 +97,24 @@ export class GameFeatureApiService {
       currentAttempt: data.currentAttempt,
       editability: data.editability,
     } satisfies TeamConfigurationReadApi;
+  }
+
+  // [R3 - Configurar Equipo] - Guardado de Alineación y Estrategia de Combate enviando un PUT a la GameAPI.
+  async saveConfiguration(
+    teamId: string,
+    body: {
+      leaderId: string;
+      companionIds: string[];
+      activeHeroIds: string[];
+      inactiveHeroIds: string[];
+      strategyCode: import('./model/game-api/team-configuration.model').CombatStrategy;
+    },
+  ) {
+    const data = await this.api.put<FinalSaveConfigurationApi>( // Llamada HTTP - PUT.
+      `/teams/${teamId}/configuration`,
+      body,
+    );
+    return data;
   }
 
   async currentJourney(teamId: string, lang: string) {
