@@ -127,7 +127,7 @@ de los diez integrantes.
 |   8 | `Yani Emanuel Castillo`              | R10 — Eventos en Vivo        | Batalla Final | Individual      |
 |   9 | `Manuel Augusto Álvarez`             | R11 — Estado del Equipo      | Batalla Final | Individual      |
 |  10 | `Thomas Keib Elizondo`               | R12 — Estadísticas y Premios | Resultados    | Individual      |
-|  11 | `[Completar]`                        | R13 — Historial              | Resultados    | Individual      |
+|  11 | `Franco Córdoba`                        | R13 — Historial              | Resultados    | Individual      |
 
 > **R9 — Batalla Final es obligatoria para la aprobación del TP y responsabilidad
 > del grupo completo.**
