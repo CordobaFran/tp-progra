@@ -15,6 +15,8 @@ export class LiveEventsService extends BaseApiService {
     lang: 'en',
   };
 
+  private latestRequestId = 0;
+
   constructor(
     api: ApiService,
     private readonly appContext: AppContextService,
@@ -31,6 +33,8 @@ export class LiveEventsService extends BaseApiService {
   }
 
   refresh(): void {
+    const requestId = ++this.latestRequestId;
+
     this.pageState.lang = this.appContext.getCurrentLang();
     this.pageState.status = 'loading';
     this.pageState.error = null;
@@ -38,11 +42,19 @@ export class LiveEventsService extends BaseApiService {
     this.pageState.data = null;
     this.getData<LiveEventsStateModel>('/final-stage/events').subscribe({
       next: (data) => {
+        if (requestId !== this.latestRequestId) {
+          return;
+        }
+
         this.pageState.data = data;
         this.pageState.status =
           data.status === 'UNAVAILABLE' || !data.events.length ? 'empty' : 'data';
       },
       error: (error: unknown) => {
+        if (requestId !== this.latestRequestId) {
+          return;
+        }
+
         const apiError = toApiError(error);
         this.pageState.status = 'error';
         this.pageState.error = apiError.message;
