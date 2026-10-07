@@ -29,7 +29,6 @@ export class LiveEventsService {
           'Invalid or inconsistent Final Stage events. Refresh the record.',
         );
       }
-      // Names come from the public localized catalog; unknown identities retain their published ID.
       const names = new Map<string, string>();
       if (response.events.length) {
         const catalog = await this.gameFeatureApi.heroes(this.context.language);
