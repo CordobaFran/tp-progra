@@ -8,9 +8,14 @@ import { TeamConfigService } from './service/team-config.service';
   standalone: false,
 })
 export class TeamConfigComponent implements OnInit {
-  constructor(private readonly teamconfigService: TeamConfigService) {}
+  configuracion: any;
+
+  constructor(private readonly teamConfigService: TeamConfigService) {}
 
   ngOnInit(): void {
-    this.teamconfigService.initialize();
+    this.teamConfigService.getTeamConfiguration('team-1').subscribe((datos) => {
+      this.configuracion = datos;
+      console.log('Datos recibidos:', datos);
+    });
   }
 }
