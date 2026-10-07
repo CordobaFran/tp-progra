@@ -1,3 +1,148 @@
-<main class="student-feature-shell">
-  <app-feature-pending></app-feature-pending>
+<main
+  class="student-feature-shell live-events-container"
+  [attr.aria-busy]="pageState.status === 'loading'"
+>
+  <header class="header-section">
+    <div>
+      <span class="caption-box">{{ translate('r10.caption') }}</span>
+      <h1 class="page-title">{{ translate('r10.title') }}</h1>
+      <p class="page-subtitle">{{ translate('r10.subtitle') }}</p>
+    </div>
+    <button
+      type="button"
+      class="button btn-refresh"
+      (click)="refresh()"
+      [disabled]="pageState.status === 'loading'"
+    >
+      {{ translate('r10.refresh') }}
+    </button>
+  </header>
+
+  <app-loading-state
+    *ngIf="pageState.status === 'loading'"
+    [message]="translate('loading')"
+  ></app-loading-state>
+  <app-error-state
+    *ngIf="pageState.status === 'error'"
+    [message]="pageState.error ?? translate('error')"
+    [messageCode]="pageState.errorCode ?? null"
+  ></app-error-state>
+  <button
+    type="button"
+    class="button btn-refresh"
+    *ngIf="pageState.status === 'error'"
+    (click)="refresh()"
+  >
+    {{ translate('retry') }}
+  </button>
+
+  <ng-container *ngIf="pageState.data as state">
+    <app-empty-state
+      *ngIf="state.status === 'UNAVAILABLE'"
+      [message]="translate('r10.noBattleCopy')"
+    ></app-empty-state>
+    <a *ngIf="state.status === 'UNAVAILABLE'" routerLink="/journey/simulate">{{
+      translate('r10.simulateLink')
+    }}</a>
+    <ng-container *ngIf="state.status !== 'UNAVAILABLE'">
+      <section
+        class="functional-panel state-banner"
+        [ngClass]="state.status.toLowerCase()"
+        aria-live="polite"
+      >
+        <h2 class="panel-title">
+          {{ translate('r10.status') }}:
+          {{
+            translate(
+              state.status === 'READY'
+                ? 'r10.ready'
+                : state.status === 'ACTIVE'
+                  ? 'r10.active'
+                  : 'r10.completed'
+            )
+          }}
+        </h2>
+        <p>{{ translate('r10.phase') }}: {{ state.phaseLabel ?? state.phase }}</p>
+      </section>
+      <app-empty-state
+        *ngIf="pageState.status === 'empty'"
+        [message]="translate('r10.emptyEvents')"
+      ></app-empty-state>
+      <section
+        class="timeline"
+        *ngIf="pageState.status === 'data'"
+        [attr.aria-label]="translate('r10.events')"
+      >
+        <article
+          class="functional-panel event-card"
+          *ngFor="let event of state.events; trackBy: trackEvent"
+        >
+          <div class="event-header">
+            <span class="event-turn">{{ translate('r10.turn', { turn: event.turn }) }}</span>
+            <span>{{ translate('r10.sequence') }}: {{ event.sequence }}</span>
+          </div>
+          <div class="event-content">
+            <h3 class="panel-title">{{ translate('r10.eventType') }}: {{ event.eventCode }}</h3>
+            <p>{{ translate('r10.phase') }}: {{ event.phase }}</p>
+            <p *ngIf="event.values.actionName">
+              {{ translate('r10.action') }}: {{ event.values.actionName }}
+            </p>
+            <div class="event-actors">
+              <span *ngIf="event.actorName"
+                >{{ translate('r10.actor') }}:
+                <strong class="actor">{{ event.actorName }}</strong></span
+              >
+              <span *ngIf="event.targetNames.length"
+                >{{ translate('r10.target') }}:
+                <strong class="target">{{ event.targetNames.join(', ') }}</strong></span
+              >
+            </div>
+            <div class="event-stats">
+              <span class="tag stat damage" *ngIf="event.values.damage !== undefined"
+                >{{ translate('r10.damage') }}: {{ event.values.damage }}</span
+              >
+              <span class="tag stat healing" *ngIf="event.values.healing !== undefined"
+                >{{ translate('r10.healing') }}: {{ event.values.healing }}</span
+              >
+              <span class="tag stat ap" *ngIf="event.values.apChange !== undefined"
+                >{{ translate('r10.apChange') }}: {{ event.values.apChange }}</span
+              >
+              <span class="tag stat" *ngIf="event.values.energy !== undefined"
+                >{{ translate('r10.energy') }}: {{ event.values.energy }}</span
+              >
+              <span class="tag stat" *ngIf="event.values.abilityPoints !== undefined"
+                >{{ translate('r10.abilityPoints') }}: {{ event.values.abilityPoints }}</span
+              >
+              <span
+                class="tag stat"
+                *ngIf="
+                  event.values.amount !== undefined &&
+                  event.values.damage === undefined &&
+                  event.values.healing === undefined
+                "
+                >{{ translate('r10.amount') }}: {{ event.values.amount }}</span
+              >
+              <span class="tag stat" *ngIf="event.values.percent !== undefined"
+                >{{ translate('r10.percent') }}: {{ event.values.percent }}</span
+              >
+              <span class="tag stat" *ngIf="event.values.duration !== undefined"
+                >{{ translate('r10.duration') }}: {{ event.values.duration }}</span
+              >
+            </div>
+            <dl class="event-details">
+              <ng-container *ngFor="let detail of publishedFacts(event)">
+                <dt>{{ detail.label }}</dt>
+                <dd>{{ detail.value }}</dd>
+              </ng-container>
+            </dl>
+            <app-narrative-renderer
+              *ngIf="event.narrative"
+              [lines]="event.narrative.lines"
+              [ariaLabel]="translate('r10.narrative')"
+            ></app-narrative-renderer>
+          </div>
+        </article>
+      </section>
+    </ng-container>
+  </ng-container>
 </main>
