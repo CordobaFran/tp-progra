@@ -1,3 +1,32 @@
-<main class="student-feature-shell">
-  <app-feature-pending></app-feature-pending>
+<main class="history-rivals-page">
+  <header>
+    <span class="caption-box">{{ translate('historyRivals.caption', pageState.lang) }}</span>
+    <h1 class="page-title">{{ translate('historyRivals.title', pageState.lang) }}</h1>
+    <p class="page-subtitle">{{ translate('historyRivals.subtitle', pageState.lang) }}</p>
+  </header>
+
+  <section class="functional-panel" aria-live="polite">
+    <app-loading-state
+      *ngIf="pageState.status === 'loading'"
+      [message]="translate('historyRivals.loading', pageState.lang)"
+    ></app-loading-state>
+    <app-error-state
+      *ngIf="pageState.status === 'error'"
+      [message]="pageState.error ?? translate('error', pageState.lang)"
+      [messageCode]="pageState.errorCode ?? null"
+    ></app-error-state>
+    <app-empty-state
+      *ngIf="pageState.status === 'empty'"
+      [message]="translate('historyRivals.noTeamHeroes', pageState.lang)"
+    ></app-empty-state>
+    <pre *ngIf="pageState.status === 'data'">{{ pageState.data | json }}</pre>
+    <button
+      *ngIf="pageState.status === 'error'"
+      type="button"
+      class="button button-secondary"
+      (click)="retry()"
+    >
+      {{ translate('retry', pageState.lang) }}
+    </button>
+  </section>
 </main>

@@ -1,11 +1,22 @@
-import { Controller } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AbstractController } from '../../basic/abstract.controller';
+import { ResponseObject } from '../../basic/response-object.interface';
+import { HistoryRivalsModel } from './model/history-rivals.model';
 import { HistoryRivalsService } from './history-rivals.service';
 
-@ApiTags('history-rivals')
+@ApiTags('History Rivals')
 @Controller('my-team/history-rivals')
-export class HistoryRivalsController {
-  constructor(private readonly historyrivalsService: HistoryRivalsService) {}
+export class HistoryRivalsController extends AbstractController {
+  constructor(private readonly historyRivalsService: HistoryRivalsService) {
+    super();
+  }
 
-  // TODO: Add the feature endpoints during the student implementation.
+  @Get()
+  @ApiOperation({
+    summary: 'Read the Team Heroes with their canonical Rivals and the available Journeys.',
+  })
+  async getHistoryRivals(): Promise<ResponseObject<HistoryRivalsModel>> {
+    return this.createOkResponse(await this.historyRivalsService.getHistoryRivals());
+  }
 }

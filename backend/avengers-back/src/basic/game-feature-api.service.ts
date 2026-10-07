@@ -3,6 +3,7 @@ import { GameApiService } from './game-api.service';
 import {
   FinalAssignedTeamCatalogApi,
   FinalCurrentJourneyApi,
+  FinalHistoryApi,
   FinalJourneyTeamsApi,
   FinalHeroCatalogApi,
   FinalRelationshipCatalogApi,
@@ -96,6 +97,10 @@ export class GameFeatureApiService {
       currentAttempt: data.currentAttempt,
       editability: data.editability,
     } satisfies TeamConfigurationReadApi;
+  }
+
+  history(teamId: string, lang: string) {
+    return this.api.get<FinalHistoryApi>(`/teams/${teamId}/history`, { lang });
   }
 
   async currentJourney(teamId: string, lang: string) {
