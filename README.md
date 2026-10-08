@@ -80,7 +80,7 @@ backend/avengers-back/.env
 mediante la variable:
 
 ```env
-TEAM_ID=<id-del-personaje-asignado>
+TEAM_ID=hulk
 ```
 
 ### Tech Lead
@@ -101,7 +101,7 @@ Entre sus responsabilidades se incluyen:
 - Centralizar consultas técnicas y comunicación con la cátedra.
 - Ayudar a destrabar problemas técnicos dentro del equipo.
 
-**Nombre del Tech Lead:** `[Completar con Nombre]`
+**Nombre del Tech Lead:** `Yani Castillo`
 
 ### Integrantes por funcionalidad
 
@@ -117,13 +117,13 @@ de los diez integrantes.
 
 |   # | Integrante                           | Funcionalidad                | Sección       | Responsabilidad |
 | --: | ------------------------------------ | ---------------------------- | ------------- | --------------- |
-|   1 | `[Felipe Vallejo]`                     | R2 — Historia y Rivales      | Equipo        | Individual      |
+|   1 | `Felipe Vallejo`                     | R2 — Historia y Rivales      | Equipo        | Individual      |
 |   2 | `Agustín Tapia`                      | R3 — Configurar Equipo       | Equipo        | Individual      |
 |   3 | `Ignacio Martin Roman`               | R5 — Fase de Grupos          | Camino        | Individual      |
 |   4 | `Leonardo Fleita`                    | R6 — Fase Eliminatoria       | Camino        | Individual      |
 |   5 | `[Completar]`                        | R7 — Camino del Equipo       | Camino        | Individual      |
 |   6 | `[Completar]`                        | R8 — Preparar Batalla Final  | Batalla Final | Individual      |
-|   7 | `[Completar; idealmente, Tech Lead]` | R9 — Batalla Final           | Batalla Final | Grupal          |
+|   7 | `Yani Castillo` | R9 — Batalla Final           | Batalla Final | Grupal          |
 |   8 | `Yani Emanuel Castillo`              | R10 — Eventos en Vivo        | Batalla Final | Individual      |
 |   9 | `Manuel Augusto Álvarez`             | R11 — Estado del Equipo      | Batalla Final | Individual      |
 |  10 | `Thomas Keib Elizondo`               | R12 — Estadísticas y Premios | Resultados    | Individual      |

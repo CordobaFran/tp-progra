@@ -1,3 +1,4 @@
+import { FinalStageService } from './shared/final-stage.service';
 import { Module } from '@nestjs/common';
 import { FinalBattleController } from './final-battle/final-battle.controller';
 import { FinalBattleService } from './final-battle/final-battle.service';
@@ -15,6 +16,13 @@ import { TeamStatusService } from './team-status/team-status.service';
     LiveEventsController,
     TeamStatusController,
   ],
-  providers: [FinalPreparationService, FinalBattleService, LiveEventsService, TeamStatusService],
+  providers: [
+    FinalPreparationService,
+    FinalBattleService,
+    LiveEventsService,
+    TeamStatusService,
+    FinalStageService,
+  ],
+  exports: [FinalStageService],
 })
 export class FinalBattleModule {}
