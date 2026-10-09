@@ -1,4 +1,57 @@
-<main class="student-feature-shell">
-  <h2>Configurar Equipo - Checkpoint 2 [R3]</h2>
-  <pre>{{ configuracion | json }}</pre>
-</main>
+<div class="config-page" *ngIf="configuracion">
+  <!-- Titulo principal -->
+  <header class="config-header">
+    <div class="title-row">
+      <h2 class="page-title">CONFIGURACIÓN DEL EQUIPO</h2>
+      <span class="team-tag">EQUIPO: <strong>{{ teamId }}</strong></span>
+    </div>
+    <p class="page-subtitle">Alineación táctica y distribución de titulares y suplentes</p>
+  </header>
+
+  <!-- lista de héroes -->
+  <div class="config-workspace">
+    <div class="heroes-grid" *ngIf="heroes.length > 0">
+      <div 
+        class="hero-card" 
+        *ngFor="let hero of heroes"
+        [class.is-active]="configuracion.configuration?.activeHeroIds?.includes(hero.id)"
+      >
+        <!-- Si es titular o suplente (inactiveHero) -->
+        <span 
+          class="status-marker"
+          [class.active-marker]="configuracion.configuration?.activeHeroIds?.includes(hero.id)"
+        >
+          {{ configuracion.configuration?.activeHeroIds?.includes(hero.id) ? 'TITULAR' : 'SUPLENTE' }}
+        </span>
+
+        <!-- Foto del héroe -->
+        <div class="card-art">
+          <img 
+            [src]="getHeroImage(hero.id)" 
+            [alt]="hero.displayName" 
+            class="hero-img"
+          />
+        </div>
+        <!-- El nombre y rol -->
+        <div class="card-details">
+          <h3 class="hero-name">{{ hero.displayName }}</h3>
+          <span class="role-tag">
+            {{ hero.roles?.primary?.label || hero.roles?.primary?.code }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- mensaje SI aún está cargando la lista de héroes (*ngIf="heroes.lenght === 0").. -->
+    <div *ngIf="heroes.length === 0" class="empty-state">
+      <p>CARGANDO HÉROES DEL EQUIPO...</p>
+    </div>
+  </div>
+
+  <!-- Botón para guardar cambios -->
+  <footer class="config-actions">
+    <button type="button" class="btn-save">
+      GUARDAR CONFIGURACIÓN
+    </button>
+  </footer>
+</div>
