@@ -15,6 +15,8 @@
         class="hero-card" 
         *ngFor="let hero of heroes"
         [class.is-active]="configuracion.configuration?.activeHeroIds?.includes(hero.id)"
+        (click)="seleccionarHeroe(hero.id)"
+        style="cursor: pointer;"
       >
         <!-- Si es titular o suplente (inactiveHero) -->
         <span 
@@ -49,9 +51,9 @@
   </div>
 
   <!-- Botón para guardar cambios -->
-  <footer class="config-actions">
-    <button type="button" class="btn-save">
-      GUARDAR CONFIGURACIÓN
-    </button>
-  </footer>
+    <footer class="config-actions">
+      <button type="button" class="btn-save" (click)="guardarConfiguracion()"> <!-- "guardarConfiguracion" para enlazar con el método de TypeScript -->
+        GUARDAR CONFIGURACIÓN
+      </button>
+    </footer>
 </div>

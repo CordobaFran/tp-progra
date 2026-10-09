@@ -4,7 +4,7 @@ import { CombatStrategy } from '../../basic/model/game-api/team-configuration.mo
 
 @Injectable()
 export class TeamConfigService {
-  constructor(private readonly gameApi: GameFeatureApiService) {} // conexión con la GameAPI 
+  constructor(private readonly gameApi: GameFeatureApiService) {} // conexión con la GameAPI
 
   // [R3: Configurar Equipo] - obtiene (get) la configuración actual del equipo de la Game API
   async getConfiguration(teamId: string) {
@@ -23,9 +23,7 @@ export class TeamConfigService {
   ) {
     // Calculamos los inactivos: son todos los miembros del equipo (líder + acompañantes) que NO están activos
     const allHeroIds = [datos.leaderId, ...datos.companionIds];
-    const inactiveHeroIds = allHeroIds.filter(
-      (id) => !datos.activeHeroIds.includes(id),
-    );
+    const inactiveHeroIds = allHeroIds.filter((id) => !datos.activeHeroIds.includes(id));
 
     // Llamamos al metodo PUT que creamos en GameFeatureApiService
     return await this.gameApi.saveConfiguration(teamId, {

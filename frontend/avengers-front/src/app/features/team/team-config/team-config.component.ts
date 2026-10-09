@@ -41,4 +41,39 @@ export class TeamConfigComponent implements OnInit {
   getHeroImage(heroId: string): string {
     return this.artworkService.cardPath(heroId);
   }
+
+  // Selección de Héroe - método
+  seleccionarHeroe(heroId: string): void { // recibe como parámetro el ID del héroe que seleccionaste
+    if (!this.configuracion?.configuration) return; // si no devuelve nada o valores undefined, se frena, no se rompe
+
+    const activeIds: string[] = this.configuracion.configuration.activeHeroIds ?? [];
+    const index = activeIds.indexOf(heroId);
+
+    if (index > -1) { // condicional por si el heroe seleccionado era titular o suplente
+      activeIds.splice(index, 1);
+    } else {
+      activeIds.push(heroId);
+    }
+
+    this.configuracion.configuration.activeHeroIds = [...activeIds];
+  }
+
+  // método para enviar los cambios al backend con el PUT
+  guardarConfiguracion(): void {
+    if (!this.teamId || !this.configuracion?.configuration) return; // si no tengo el team ID .. O .. la configuración, frena la ejecucion y devolve undefined
+
+    const payload = {
+      startingHeroIds: this.configuracion.configuration.activeHeroIds ?? [],
+    };
+
+    this.teamConfigService.updateTeamConfiguration(this.teamId, payload).subscribe({
+      next: () => {
+        alert('Configuración guardada con éxito'); // si se ejecutó el PUT correctamente
+      },
+      error: (err) => {
+        console.error('Error al guardar: ', err); // si la ejecución falló
+        alert('Error al guardar la configuración');
+      },
+    });
+  }
 }
