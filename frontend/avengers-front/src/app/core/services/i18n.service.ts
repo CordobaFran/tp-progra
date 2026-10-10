@@ -362,6 +362,36 @@ export type AppCopyKey =
   | 'r9.event.swapDetail'
   | 'r9.event.specialDetail'
   | 'r9.event.skippedDetail'
+  | 'r10.refresh'
+  | 'r10.status'
+  | 'r10.ready'
+  | 'r10.active'
+  | 'r10.completed'
+  | 'r10.sequence'
+  | 'r10.action'
+  | 'r10.damage'
+  | 'r10.healing'
+  | 'r10.apChange'
+  | 'r10.energy'
+  | 'r10.abilityPoints'
+  | 'r10.amount'
+  | 'r10.percent'
+  | 'r10.duration'
+  | 'r10.narrative'
+  | 'r10.actionCode'
+  | 'r10.strategyCode'
+  | 'r10.itemName'
+  | 'r10.effectCode'
+  | 'r10.statCode'
+  | 'r10.actorSideCode'
+  | 'r10.targetSideCode'
+  | 'r10.revealedIdentityId'
+  | 'r10.previousIdentityId'
+  | 'r10.speakerTeamId'
+  | 'r10.playerTeamId'
+  | 'r10.opponentTeamId'
+  | 'r10.alignmentCode'
+  | 'r10.nextNormalTurn'
   | 'r10.caption'
   | 'r10.title'
   | 'r10.subtitle'
@@ -794,6 +824,36 @@ const DICTIONARY: Record<AppLanguage, Record<AppCopyKey, string>> = {
     'r9.event.specialDetail': 'A special battle event was recorded.',
     'r9.event.skippedDetail': '{actor} could not complete the action.',
     'r9.event.skipped': 'ACTION SKIPPED',
+    'r10.refresh': 'Refresh',
+    'r10.status': 'Status',
+    'r10.ready': 'Ready to start',
+    'r10.active': 'Battle active',
+    'r10.completed': 'Battle completed',
+    'r10.sequence': 'Order',
+    'r10.action': 'Action',
+    'r10.damage': 'Damage',
+    'r10.healing': 'Healing',
+    'r10.apChange': 'Ability points change',
+    'r10.energy': 'Energy',
+    'r10.abilityPoints': 'Ability points',
+    'r10.amount': 'Amount',
+    'r10.percent': 'Percent',
+    'r10.duration': 'Duration',
+    'r10.narrative': 'Battle narrative',
+    'r10.actionCode': 'Action code',
+    'r10.strategyCode': 'Strategy',
+    'r10.itemName': 'Item',
+    'r10.effectCode': 'Effect',
+    'r10.statCode': 'Stat',
+    'r10.actorSideCode': 'Actor side',
+    'r10.targetSideCode': 'Target side',
+    'r10.revealedIdentityId': 'Revealed identity',
+    'r10.previousIdentityId': 'Previous identity',
+    'r10.speakerTeamId': 'Speaking team',
+    'r10.playerTeamId': 'Player team',
+    'r10.opponentTeamId': 'Opponent team',
+    'r10.alignmentCode': 'Alignment',
+    'r10.nextNormalTurn': 'Next turn',
     'r10.caption': 'FINAL BATTLE',
     'r10.title': 'LIVE EVENTS',
     'r10.subtitle': 'Chronological events from the current Final Battle.',
@@ -1228,6 +1288,36 @@ const DICTIONARY: Record<AppLanguage, Record<AppCopyKey, string>> = {
     'r9.event.specialDetail': 'Se registró un evento especial del combate.',
     'r9.event.skippedDetail': '{actor} no pudo completar la acción.',
     'r9.event.skipped': 'ACCIÓN OMITIDA',
+    'r10.refresh': 'Actualizar',
+    'r10.status': 'Estado',
+    'r10.ready': 'Lista para iniciar',
+    'r10.active': 'Batalla activa',
+    'r10.completed': 'Batalla completada',
+    'r10.sequence': 'Orden',
+    'r10.action': 'Acción',
+    'r10.damage': 'Daño',
+    'r10.healing': 'Recuperación',
+    'r10.apChange': 'Cambio de puntos de habilidad',
+    'r10.energy': 'Energía',
+    'r10.abilityPoints': 'Puntos de habilidad',
+    'r10.amount': 'Cantidad',
+    'r10.percent': 'Porcentaje',
+    'r10.duration': 'Duración',
+    'r10.narrative': 'Narrativa de la batalla',
+    'r10.actionCode': 'Tipo de acción',
+    'r10.strategyCode': 'Estrategia',
+    'r10.itemName': 'Objeto',
+    'r10.effectCode': 'Efecto',
+    'r10.statCode': 'Estadística',
+    'r10.actorSideCode': 'Bando del actor',
+    'r10.targetSideCode': 'Bando del objetivo',
+    'r10.revealedIdentityId': 'Identidad revelada',
+    'r10.previousIdentityId': 'Identidad anterior',
+    'r10.speakerTeamId': 'Equipo que habla',
+    'r10.playerTeamId': 'Equipo del jugador',
+    'r10.opponentTeamId': 'Equipo oponente',
+    'r10.alignmentCode': 'Alianza',
+    'r10.nextNormalTurn': 'Próximo turno',
     'r10.caption': 'BATALLA FINAL',
     'r10.title': 'EVENTOS EN VIVO',
     'r10.subtitle': 'Cronología de eventos de la Batalla Final actual.',
@@ -1237,7 +1327,7 @@ const DICTIONARY: Record<AppLanguage, Record<AppCopyKey, string>> = {
     'r10.emptyEvents': 'Todavía no se registraron eventos.',
     'r10.turn': 'TURNO {turn}',
     'r10.phase': 'ETAPA',
-    'r10.actor': 'HÉROE',
+    'r10.actor': 'ACTOR',
     'r10.target': 'OBJETIVO',
     'r10.eventType': 'EVENTO',
     'r10.simulateLink': 'SIMULAR BATALLAS',

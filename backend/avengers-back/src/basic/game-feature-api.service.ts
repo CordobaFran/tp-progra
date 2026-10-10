@@ -3,12 +3,12 @@ import { GameApiService } from './game-api.service';
 import {
   FinalAssignedTeamCatalogApi,
   FinalCurrentJourneyApi,
+  FinalHistoryApi,
   FinalJourneyTeamsApi,
   FinalHeroCatalogApi,
   FinalRelationshipCatalogApi,
   FinalSimulateJourneyApi,
   FinalTeamConfigurationDataApi,
-  FinalSaveConfigurationApi,
 } from './model/game-api/final-contract.model';
 import { HeroCatalogApi, RelationshipCatalogApi } from './model/game-api/hero-catalog.model';
 import {
@@ -99,22 +99,22 @@ export class GameFeatureApiService {
     } satisfies TeamConfigurationReadApi;
   }
 
-  // [R3 - Configurar Equipo] - Guardado de Alineación y Estrategia de Combate enviando un PUT a la GameAPI.
+  // [R3: Configurar Equipo] - guarda la configuracion modificada mediante PUT a la Game API
   async saveConfiguration(
     teamId: string,
-    body: {
+    data: {
       leaderId: string;
       companionIds: string[];
       activeHeroIds: string[];
       inactiveHeroIds: string[];
-      strategyCode: import('./model/game-api/team-configuration.model').CombatStrategy;
+      strategyCode: string;
     },
   ) {
-    const data = await this.api.put<FinalSaveConfigurationApi>( // Llamada HTTP - PUT.
-      `/teams/${teamId}/configuration`,
-      body,
-    );
-    return data;
+    return await this.api.put(`/teams/${teamId}/configuration`, data);
+  }
+
+  history(teamId: string, lang: string) {
+    return this.api.get<FinalHistoryApi>(`/teams/${teamId}/history`, { lang });
   }
 
   async currentJourney(teamId: string, lang: string) {

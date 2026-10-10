@@ -4,12 +4,12 @@ import { CombatStrategy } from '../../basic/model/game-api/team-configuration.mo
 
 @Injectable()
 export class TeamConfigService {
-  constructor(private readonly gameApi: GameFeatureApiService) {} // conexión con la GameAPI
+  constructor(private readonly gameApi: GameFeatureApiService) {}
 
   // [R3: Configurar Equipo] - obtiene (get) la configuración actual del equipo de la Game API
   async getConfiguration(teamId: string) {
     return await this.gameApi.configuration(teamId);
-  } // lo que pide checkpoint 2
+  }
 
   // [R3: Configurar Equipo] - guarda (put) la configuración elegida por el usuario
   async saveConfiguration(
