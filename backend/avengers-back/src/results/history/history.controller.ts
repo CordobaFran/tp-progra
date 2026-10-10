@@ -1,11 +1,27 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { HistoryService } from './history.service';
+import { AbstractController } from 'src/basic/abstract.controller';
 
 @ApiTags('history')
 @Controller('results/history')
-export class HistoryController {
-  constructor(private readonly historyService: HistoryService) {}
+export class HistoryController extends AbstractController {
+  constructor(private readonly historyService: HistoryService) {
+    super();
+  }
 
-  // TODO: Add the feature endpoints during the student implementation.
+  @Get()
+  async getHistoryList(
+    @Query("lang") lang: string = "es"
+  ){
+    return this.createOkResponse(await this.historyService.getHistoryList(lang));
+  }
+
+  @Get(':attemptId')
+  async getHistoryDetail(
+    @Param('paramId') attemptId: string,
+    @Query('lang') lang: string = 'es'
+  ){
+    return this.createOkResponse(await this.historyService.getHistoryDetail(attemptId, lang));
+  }
 }
