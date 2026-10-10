@@ -60,18 +60,23 @@ export class TeamConfigComponent implements OnInit {
 
   // método para enviar los cambios al backend con el PUT
   guardarConfiguracion(): void {
-    if (!this.teamId || !this.configuracion?.configuration) return; // si no tengo el team ID .. O .. la configuración, frena la ejecucion y devolve undefined
+    if (!this.teamId || !this.configuracion?.configuration) return;
 
-    const payload = {
-      startingHeroIds: this.configuracion.configuration.activeHeroIds ?? [],
+    const config = this.configuracion.configuration;
+
+    const payload: any = {
+      leaderId: config.leaderId,
+      companionIds: config.companionIds ?? [],
+      activeHeroIds: config.activeHeroIds ?? [],
+      strategy: config.strategy,
     };
 
     this.teamConfigService.updateTeamConfiguration(this.teamId, payload).subscribe({
       next: () => {
-        alert('Configuración guardada con éxito'); // si se ejecutó el PUT correctamente
+        alert('Configuración guardada con éxito');
       },
       error: (err) => {
-        console.error('Error al guardar: ', err); // si la ejecución falló
+        console.error('Error al guardar: ', err);
         alert('Error al guardar la configuración');
       },
     });

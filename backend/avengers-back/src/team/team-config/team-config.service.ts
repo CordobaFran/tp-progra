@@ -21,17 +21,21 @@ export class TeamConfigService {
       strategy: CombatStrategy;
     },
   ) {
-    // Calculamos los inactivos: son todos los miembros del equipo (líder + acompañantes) que NO están activos
-    const allHeroIds = [datos.leaderId, ...datos.companionIds];
-    const inactiveHeroIds = allHeroIds.filter((id) => !datos.activeHeroIds.includes(id));
+    // protegemos los arrays para evitar fallos de iteración si vienen undefined
+    const companionIds = datos.companionIds || [];
+    const activeHeroIds = datos.activeHeroIds || [];
 
-    // Llamamos al metodo PUT que creamos en GameFeatureApiService
+    // Calculamos los inactivos: son todos los miembros del equipo (líder + acompañantes) que NO están activos
+    const allHeroIds = [datos.leaderId, ...companionIds];
+    const inactiveHeroIds = allHeroIds.filter((id) => !activeHeroIds.includes(id));
+
+    // Llamamos al método PUT que creamos en GameFeatureApiService
+    // la GameAPI valida de forma estricta y solo acepta companionIds, activeHeroIds y strategy (los inactivos se deducen automáticamente)
     return await this.gameApi.saveConfiguration(teamId, {
-      leaderId: datos.leaderId,
-      companionIds: datos.companionIds,
-      activeHeroIds: datos.activeHeroIds,
-      inactiveHeroIds: inactiveHeroIds,
-      strategyCode: datos.strategy,
-    });
+      companionIds: companionIds,
+      activeHeroIds: activeHeroIds,
+      strategy: datos.strategy,
+    } as any);
   }
 }
+
