@@ -6,12 +6,22 @@ export interface HeroTeamConfig {
   isStarting: boolean;
 }
 
-export interface TeamConfigResponse { // se pide el dato por metodo http GET
-  teamId: string;
-  heroes: HeroTeamConfig[]; // trae el array de HeroTeamConfig
+export interface ConfigurationData {
+  leaderId: string;
+  companionIds?: string[];
+  activeHeroIds: string[];
+  strategy?: string;
 }
 
+export interface TeamConfigResponse { // se pide el dato por metodo http GET
+  teamId: string;
+  heroes?: HeroTeamConfig[];
+  configuration?: ConfigurationData;
+}
 
 export interface UpdateTeamConfigRequest { // actualizar el Equipo con PUT
-  startingHeroIds: string[];
+  leaderId?: string;
+  companionIds?: string[];
+  activeHeroIds: string[];
+  strategy?: string;
 }

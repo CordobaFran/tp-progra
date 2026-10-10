@@ -2,6 +2,25 @@ import { Component, OnInit } from '@angular/core';
 import { TeamConfigService } from './service/team-config.service';
 import { AppContextService } from '../../../core/services/app-context.service';
 import { HeroArtworkResolverService } from '../../../core/services/hero-artwork-resolver.service';
+import { TeamConfigResponse, UpdateTeamConfigRequest } from './model/team-config.interface';
+
+interface HeroItem {
+  id: string;
+  displayName?: string;
+  roles?: {
+    primary?: {
+      label?: string;
+      code?: string;
+    };
+  };
+}
+
+interface TeamHeroesResponse {
+  data?: {
+    heroes?: HeroItem[];
+  };
+  heroes?: HeroItem[];
+}
 
 @Component({
   selector: 'app-team-config',
@@ -10,14 +29,14 @@ import { HeroArtworkResolverService } from '../../../core/services/hero-artwork-
   standalone: false,
 })
 export class TeamConfigComponent implements OnInit {
-  configuracion: any;
-  heroes: any[] = [];
+  configuracion?: TeamConfigResponse;
+  heroes: HeroItem[] = [];
   teamId: string = '';
 
   constructor( // inyecté AppContextService para acceder al estado global de la aplicación (donde vive el teamId asignado)
     private readonly teamConfigService: TeamConfigService,
     private readonly appContextService: AppContextService,
-    private readonly artworkService: HeroArtworkResolverService, 
+    private readonly artworkService: HeroArtworkResolverService,
   ) {}
 
   ngOnInit(): void {
@@ -26,14 +45,25 @@ export class TeamConfigComponent implements OnInit {
     this.teamId = resolvedTeamId;
 
     // Consultamos la configuración con el ID dinámico
-    this.teamConfigService.getTeamConfiguration(this.teamId).subscribe((datos: any) => {
-      console.log('Respuesta cruda del backend:', datos);
+    this.teamConfigService.getTeamConfiguration(this.teamId).subscribe((datos: TeamConfigResponse) => {
+      console.log('Respuesta del backend:', datos);
       this.configuracion = datos;
-    });
 
-    // Traemos los héroes del equipo para armar la lista en la pantalla
-    this.teamConfigService.getMyTeamHeroes().subscribe((resp: any) => {
-      this.heroes = resp?.data?.heroes ?? resp?.heroes ?? resp ?? [];
+      // Traemos los héroes del equipo para armar la lista en la pantalla
+      this.teamConfigService.getMyTeamHeroes().subscribe((resp: unknown) => {
+        const parsedResp = resp as TeamHeroesResponse;
+        const allHeroes: HeroItem[] = parsedResp?.data?.heroes ?? parsedResp?.heroes ?? (Array.isArray(resp) ? (resp as HeroItem[]) : []);
+
+        const leader = this.configuracion?.configuration?.leaderId;
+        const companions = this.configuracion?.configuration?.companionIds ?? [];
+        const miembrosDelEquipo = [leader, ...companions].filter((id): id is string => !!id);
+
+        if (miembrosDelEquipo.length > 0) {
+          this.heroes = allHeroes.filter((h) => miembrosDelEquipo.includes(h.id));
+        } else {
+          this.heroes = allHeroes;
+        }
+      });
     });
   }
 
@@ -44,14 +74,32 @@ export class TeamConfigComponent implements OnInit {
 
   // Selección de Héroe - método
   seleccionarHeroe(heroId: string): void { // recibe como parámetro el ID del héroe que seleccionaste
-    if (!this.configuracion?.configuration) return; // si no devuelve nada o valores undefined, se frena, no se rompe
+    if (!this.configuracion?.configuration) { // si no devuelve nada o valores undefined, se frena, no se rompe
+      return;
+    }
 
-    const activeIds: string[] = this.configuracion.configuration.activeHeroIds ?? [];
+    const leaderId = this.configuracion.configuration.leaderId;
+
+    if (heroId === leaderId) {
+      alert('El líder del equipo es titular fijo y no puede pasar a suplente.');
+      return;
+    }
+
+    let activeIds: string[] = this.configuracion.configuration.activeHeroIds ?? [];
+
+    if (leaderId && !activeIds.includes(leaderId)) {
+      activeIds.push(leaderId);
+    }
+
     const index = activeIds.indexOf(heroId);
 
     if (index > -1) { // condicional por si el heroe seleccionado era titular o suplente
       activeIds.splice(index, 1);
     } else {
+      if (activeIds.length >= 3) {
+        alert('Solo podés seleccionar 3 titulares en total (el Líder y 2 acompañantes).');
+        return;
+      }
       activeIds.push(heroId);
     }
 
@@ -60,14 +108,26 @@ export class TeamConfigComponent implements OnInit {
 
   // método para enviar los cambios al backend con el PUT
   guardarConfiguracion(): void {
-    if (!this.teamId || !this.configuracion?.configuration) return;
+    if (!this.teamId || !this.configuracion?.configuration) {
+      return;
+    }
 
     const config = this.configuracion.configuration;
+    const activeIds = [...(config.activeHeroIds ?? [])];
 
-    const payload: any = {
+    if (config.leaderId && !activeIds.includes(config.leaderId)) {
+      activeIds.push(config.leaderId);
+    }
+
+    if (activeIds.length !== 3) {
+      alert(`Debés seleccionar exactamente 3 titulares (actualmente tenés ${activeIds.length}).`);
+      return;
+    }
+
+    const payload: UpdateTeamConfigRequest = {
       leaderId: config.leaderId,
       companionIds: config.companionIds ?? [],
-      activeHeroIds: config.activeHeroIds ?? [],
+      activeHeroIds: activeIds,
       strategy: config.strategy,
     };
 
@@ -75,7 +135,7 @@ export class TeamConfigComponent implements OnInit {
       next: () => {
         alert('Configuración guardada con éxito');
       },
-      error: (err) => {
+      error: (err: unknown) => {
         console.error('Error al guardar: ', err);
         alert('Error al guardar la configuración');
       },
