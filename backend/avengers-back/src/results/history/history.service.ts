@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GameApiService } from 'src/basic/game-api.service';
-import { GameFeatureApiService } from 'src/basic/game-feature-api.service';
+//import { GameFeatureApiService } from 'src/basic/game-feature-api.service';
 import { ApplicationContextService } from 'src/basic/services/application-context.service';
 
 @Injectable()
@@ -16,5 +16,9 @@ export class HistoryService {
     const url = `/teams/${teamId}/history`;
     const response = await this.game.get<any>(url, { lang })
     return response;
+  }
+
+  async getHistoryDetail(attemptId: string, lang:string){
+    //READY FOR COMPLETE
   }
 }
