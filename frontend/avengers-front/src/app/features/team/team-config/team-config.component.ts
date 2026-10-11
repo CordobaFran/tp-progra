@@ -30,7 +30,9 @@ interface TeamHeroesResponse {
 })
 export class TeamConfigComponent implements OnInit {
   configuracion?: TeamConfigResponse;
+
   heroes: HeroItem[] = [];
+
   teamId: string = '';
 
   constructor( // inyecté AppContextService para acceder al estado global de la aplicación (donde vive el teamId asignado)
@@ -85,7 +87,7 @@ export class TeamConfigComponent implements OnInit {
       return;
     }
 
-    let activeIds: string[] = this.configuracion.configuration.activeHeroIds ?? [];
+    const activeIds: string[] = this.configuracion.configuration.activeHeroIds ?? [];
 
     if (leaderId && !activeIds.includes(leaderId)) {
       activeIds.push(leaderId);
