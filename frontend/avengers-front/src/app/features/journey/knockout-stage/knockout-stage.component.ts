@@ -11,6 +11,7 @@ import { KnockoutStageViewModel } from './model/knockout-stage-view-model.interf
 })
 export class KnockoutStageComponent implements OnInit {
   readonly knockoutStageCodeEnum = KnockoutStageCodeEnum;
+
   constructor(private readonly knockoutStageService: KnockoutStageService) {}
 
   get pageState(): KnockoutStageViewModel {
