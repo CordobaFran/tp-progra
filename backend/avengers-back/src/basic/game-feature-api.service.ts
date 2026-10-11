@@ -99,6 +99,20 @@ export class GameFeatureApiService {
     } satisfies TeamConfigurationReadApi;
   }
 
+  // [R3: Configurar Equipo] - guarda la configuracion modificada mediante PUT a la Game API
+  async saveConfiguration(
+    teamId: string,
+    data: {
+      leaderId: string;
+      companionIds: string[];
+      activeHeroIds: string[];
+      inactiveHeroIds: string[];
+      strategyCode: string;
+    },
+  ) {
+    return await this.api.put(`/teams/${teamId}/configuration`, data);
+  }
+
   history(teamId: string, lang: string) {
     return this.api.get<FinalHistoryApi>(`/teams/${teamId}/history`, { lang });
   }
