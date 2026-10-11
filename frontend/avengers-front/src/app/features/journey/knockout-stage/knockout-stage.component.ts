@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { KnockoutStageService } from './service/knockout-stage.service';
+import { KnockoutStageCodeEnum } from './model/knockout-stage-code.enum';
+import { KnockoutStageViewModel } from './model/knockout-stage-view-model.interface';
 
 @Component({
   selector: 'app-knockout-stage',
@@ -8,9 +10,19 @@ import { KnockoutStageService } from './service/knockout-stage.service';
   standalone: false,
 })
 export class KnockoutStageComponent implements OnInit {
-  constructor(private readonly knockoutstageService: KnockoutStageService) {}
+  readonly knockoutStageCodeEnum = KnockoutStageCodeEnum;
+
+  constructor(private readonly knockoutStageService: KnockoutStageService) {}
+
+  get pageState(): KnockoutStageViewModel {
+    return this.knockoutStageService.getViewModel();
+  }
 
   ngOnInit(): void {
-    this.knockoutstageService.initialize();
+    this.knockoutStageService.initialize();
+  }
+
+  retry(): void {
+    this.knockoutStageService.initialize();
   }
 }

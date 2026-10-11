@@ -1,0 +1,6 @@
+export enum KnockoutStageCodeEnum {
+  ROUND_OF_16 = 'ROUND_OF_16',
+  QUARTERFINAL = 'QUARTERFINAL',
+  SEMIFINAL = 'SEMIFINAL',
+  FINAL_STAGE = 'FINAL_STAGE',
+}

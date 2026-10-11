@@ -1,3 +1,32 @@
 <main class="student-feature-shell">
-  <app-feature-pending></app-feature-pending>
+  <h2>Fase Eliminatoria (R6)</h2>
+
+  <div *ngIf="pageState.status === 'loading'">
+    <p>Cargando datos del torneo...</p>
+  </div>
+
+  <div *ngIf="pageState.status === 'error'" style="color: red">
+    <p>Ocurrió un error: {{ pageState.error }}</p>
+    <p *ngIf="pageState.errorCode">Código: {{ pageState.errorCode }}</p>
+    <button (click)="retry()">Reintentar</button>
+  </div>
+
+  <div *ngIf="pageState.status === 'empty'">
+    <p>No se encontraron datos para la fase eliminatoria.</p>
+  </div>
+
+  <div *ngIf="pageState.status === 'data'">
+    <p style="color: #4ade80"><strong>Conexión exitosa con el backend</strong></p>
+    <pre
+      style="
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 6px;
+        overflow: auto;
+        max-height: 500px;
+      "
+      >{{ pageState.data | json }}
+    </pre>
+  </div>
 </main>
