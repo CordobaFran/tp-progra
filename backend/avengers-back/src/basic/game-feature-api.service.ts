@@ -13,6 +13,8 @@ import { HeroCatalogApi, RelationshipCatalogApi } from './model/game-api/hero-ca
 import {
   CurrentJourneyApi,
   JourneySpendingStrategy,
+  KnockoutEncountersApi,
+  KnockoutStagesApi,
   SimulateJourneyApi,
 } from './model/game-api/journey.model';
 import { TeamProfileApi } from './model/game-api/team-profile.model';
@@ -154,5 +156,18 @@ export class GameFeatureApiService {
       effect: ability.effectCode,
       targetScope: ability.targetScope,
     };
+  }
+
+  //AGREGADO POR LEO
+  knockoutStages(teamId: string) {
+    return this.api.get<KnockoutStagesApi>(`/teams/${teamId}/journeys/current/stages`);
+  }
+
+  knockoutEncounters(teamId: string, stageId?: string) {
+    const query = stageId ? { stageId } : undefined;
+    return this.api.get<KnockoutEncountersApi>(
+      `/teams/${teamId}/journeys/current/encounters`,
+      query,
+    );
   }
 }
