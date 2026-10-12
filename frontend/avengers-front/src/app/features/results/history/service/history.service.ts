@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { BaseApiService } from 'src/app/core/services/base-api.service';
-import { HistoryViewModel } from '../model/history-view-model.interface';
+import {
+  HistoryListResponse,
+  HistoryViewModel,
+} from '../model/history-view-model.interface';
 import { ApiService } from 'src/app/core/services/api.service';
 import { ApiError, toApiError } from 'src/app/core/models/api-error.interface';
 
@@ -32,7 +35,7 @@ export class HistoryService extends BaseApiService {
     this.pageState.status = "loading";
     this.pageState.error = null;
     this.pageState.errorCode = null;
-    this.getData<any>("/results/history").subscribe({
+    this.getData<HistoryListResponse>('/results/history').subscribe({
       next: (data) => {
         if (data && data.items) {
           this.pageState.data = data.items;

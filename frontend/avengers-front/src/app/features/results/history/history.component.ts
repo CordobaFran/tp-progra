@@ -14,6 +14,7 @@ export class HistoryComponent implements OnInit {
   get pageState(): HistoryViewModel {
     return this.historyService.getViewModel();
   }
+
   ngOnInit(): void {
     this.historyService.initialize();
   }
