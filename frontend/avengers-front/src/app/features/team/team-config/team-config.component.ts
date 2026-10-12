@@ -35,6 +35,10 @@ export class TeamConfigComponent implements OnInit {
 
   teamId: string = '';
 
+  catalogoHeroes: HeroItem[] = [];
+
+  terminoBusqueda: string = '';
+
   constructor( // inyecté AppContextService para acceder al estado global de la aplicación (donde vive el teamId asignado)
     private readonly teamConfigService: TeamConfigService,
     private readonly appContextService: AppContextService,
@@ -50,6 +54,17 @@ export class TeamConfigComponent implements OnInit {
     this.teamConfigService.getTeamConfiguration(this.teamId).subscribe((datos: TeamConfigResponse) => {
       console.log('Respuesta del backend:', datos);
       this.configuracion = datos;
+
+    // Catálogo general de héroes disponibles 
+    this.teamConfigService.getHeroesCatalog().subscribe({
+      next: (resp: unknown) => {
+        const parsed = resp as TeamHeroesResponse;
+        this.catalogoHeroes = parsed?.data?.heroes ?? parsed?.heroes ?? (Array.isArray(resp) ? (resp as HeroItem[]) : []);
+      },
+      error: (err: unknown) => {
+        console.error('Error al cargar catalogo:', err);
+      },
+    });
 
       // Traemos los héroes del equipo para armar la lista en la pantalla
       this.teamConfigService.getMyTeamHeroes().subscribe((resp: unknown) => {
@@ -142,5 +157,49 @@ export class TeamConfigComponent implements OnInit {
         alert('Error al guardar la configuración');
       },
     });
+  }
+
+  // Filtra el catálogo en tiempo real según el texto ingresado
+// Filtra el catálogo en tiempo real según el texto ingresado
+  get heroesFiltrados(): HeroItem[] {
+    if (!this.terminoBusqueda.trim()) {
+      return this.catalogoHeroes;
+    }
+
+    const busqueda = this.terminoBusqueda.toLowerCase();
+
+    return this.catalogoHeroes.filter((h) => 
+      (h.displayName?.toLowerCase().includes(busqueda) || h.id.toLowerCase().includes(busqueda))
+    );
+  }
+
+  // Agregar o quitar acompañantes (máximo 5)
+  alternarAcompaniante(heroId: string): void {
+    if (!this.configuracion?.configuration) {
+      return;
+    }
+
+    const config = this.configuracion.configuration;
+    const leaderId = config.leaderId;
+
+    if (heroId === leaderId) {
+      alert('El líder no se puede modificar.');
+      return;
+    }
+
+    let companions = [...(config.companionIds ?? [])];
+
+    if (companions.includes(heroId)) {
+      companions = companions.filter((id: string) => id !== heroId);
+      config.activeHeroIds = (config.activeHeroIds ?? []).filter((id: string) => id !== heroId);
+    } else {
+      if (companions.length >= 5) {
+        alert('El equipo ya tiene los 5 acompañantes máximos permitidos.');
+        return;
+      }
+      companions.push(heroId);
+    }
+
+    config.companionIds = [...companions];
   }
 }

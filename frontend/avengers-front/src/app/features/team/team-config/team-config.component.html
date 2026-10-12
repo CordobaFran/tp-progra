@@ -48,6 +48,59 @@
     <div *ngIf="heroes.length === 0" class="empty-state">
       <p>CARGANDO HÉROES DEL EQUIPO...</p>
     </div>
+
+ <!-- Catálogo general de héroes para sumar o quitar acompañantes -->
+    <section class="catalogo-workspace" *ngIf="catalogoHeroes.length > 0">
+      <div class="catalogo-header">
+        <h3 class="catalogo-title">CATÁLOGO DE HÉROES DISPONIBLES</h3>
+        <p class="catalogo-subtitle">Hacé click en un héroe para sumarlo o quitarlo de los 5 acompañantes</p>
+      </div>
+
+      <!-- Buscador ARRIBA de las cartas -->
+      <div class="buscador-container" style="margin-bottom: 1rem;">
+        <input 
+          type="text" 
+          placeholder="Buscar héroe por nombre..." 
+          [(ngModel)]="terminoBusqueda"
+          style="padding: 0.5rem; width: 100%; border-radius: 4px; border: 1px solid #475569; background: #1e293b; color: white;"
+        />
+      </div>
+
+      <div class="heroes-grid">
+        <div 
+          class="hero-card"
+          *ngFor="let hero of heroesFiltrados"
+          [class.is-active]="configuracion.configuration?.companionIds?.includes(hero.id)"
+          (click)="alternarAcompaniante(hero.id)"
+          style="cursor: pointer;"
+        >
+          <!-- Estado en el equipo -->
+          <span 
+            class="status-marker"
+            [class.active-marker]="configuracion.configuration?.companionIds?.includes(hero.id)"
+          >
+            {{ configuracion.configuration?.companionIds?.includes(hero.id) ? 'EN EQUIPO' : 'DISPONIBLE' }}
+          </span>
+
+          <!-- Foto del héroe -->
+          <div class="card-art">
+            <img 
+              [src]="getHeroImage(hero.id)" 
+              [alt]="hero.displayName" 
+              class="hero-img"
+            />
+          </div>
+
+          <!-- Nombre y rol -->
+          <div class="card-details">
+            <h3 class="hero-name">{{ hero.displayName }}</h3>
+            <span class="role-tag">
+              {{ hero.roles?.primary?.label || hero.roles?.primary?.code }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <!-- Botón para guardar cambios -->
