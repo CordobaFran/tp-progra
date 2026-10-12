@@ -34,4 +34,11 @@ export class TeamConfigService extends BaseApiService {
   getMyTeamHeroes(): Observable<unknown> {
     return this.getData<unknown>('/my-team/heroes');
   }
+
+  // GET -> Obtiene el catálogo canónico de héroes desde el backend
+  getHeroesCatalog(): Observable<unknown[]> {
+    return this.getData<unknown[]>('/my-team/heroes');
+  }
+
+
 }

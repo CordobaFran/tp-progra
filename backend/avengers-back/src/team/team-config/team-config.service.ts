@@ -37,5 +37,6 @@ export class TeamConfigService {
       strategy: datos.strategy,
     } as any);
   }
+
 }
 
