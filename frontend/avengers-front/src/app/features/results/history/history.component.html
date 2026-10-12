@@ -1,3 +1,27 @@
 <main class="student-feature-shell">
-  <app-feature-pending></app-feature-pending>
+  <div [ngSwitch]="pageState.status">
+    <div *ngSwitchCase="'loading'">
+      <h2>Cargando</h2>
+    </div>
+    <div *ngSwitchCase="'error'">
+      <h2>Error al cargar el historial</h2>
+      <p>{{ pageState.error }}</p>
+    </div>
+
+    <div *ngSwitchCase="'empty'">
+      <h2>El Team Hulk no registra torneos</h2>
+    </div>
+
+    <div *ngSwitchCase="'data'">
+      <h2>Torneos Completados (Historial)</h2>
+      
+      <div *ngFor="let item of pageState.data">
+        <p><strong>ID del Torneo (attemptId):</strong> {{ item.attemptId }}</p>
+        <p><strong>Estrategia:</strong> {{ item.spendingStrategyCode }}</p>
+        <p><strong>Resultado (outcomeCode):</strong> {{ item.outcomeCode }}</p>
+        <p><strong>Resumen:</strong> {{ item.endingSummary }}</p>
+      </div>
+    </div>
+  </div>
 </main>
+
