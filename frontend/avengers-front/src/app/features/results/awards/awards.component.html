@@ -1,3 +1,212 @@
-<main class="student-feature-shell">
-  <app-feature-pending></app-feature-pending>
+<main class="awards-page" [attr.aria-busy]="pageState.status === 'loading'">
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">RESULTADOS · R12</span>
+      <h1>Estadísticas y premios</h1>
+      <p>El recorrido del torneo y sus reconocimientos oficiales.</p>
+    </div>
+    <button type="button" (click)="refresh()" [disabled]="pageState.status === 'loading'">
+      Actualizar
+    </button>
+  </header>
+  <p *ngIf="attemptId" class="historical">
+    Consultando un torneo del historial. <a routerLink="/results/awards">Ver torneo actual</a>
+  </p>
+  <section *ngIf="pageState.status === 'loading'" class="panel state" role="status">
+    Cargando estadísticas y premios…
+  </section>
+  <section *ngIf="pageState.status === 'empty'" class="panel state" role="status">
+    <h2>Resultados aún no disponibles</h2>
+    <p>{{ pageState.error }}</p>
+    <a routerLink="/journey/simulate">Simular batallas</a>
+    <a routerLink="/final-stage/play">Batalla Final</a>
+    <a routerLink="/results/history">Historial</a>
+  </section>
+  <section *ngIf="pageState.status === 'error'" class="panel state error" role="alert">
+    <h2>No se pudieron cargar los resultados</h2>
+    <p>{{ pageState.error }}</p>
+    <p *ngIf="pageState.errorCode">Código: {{ pageState.errorCode }}</p>
+    <button type="button" (click)="refresh()">Reintentar</button>
+  </section>
+  <ng-container *ngIf="pageState.data as data">
+    <section class="summary" aria-label="Resumen del torneo">
+      <article class="panel">
+        <span>Resultado de {{ teamName(data.configuredTeamId) }}</span
+        ><strong>{{ outcome(data.completionOutcome) }}</strong
+        ><small>{{ data.completedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+      </article>
+      <article class="panel">
+        <span>Encuentros del torneo</span><strong>{{ data.competition.journeyEncounters }}</strong
+        ><small>Camino previo a la final</small>
+      </article>
+      <article class="panel">
+        <span>Turnos normales de la final</span
+        ><strong>{{ data.competition.finalStageNormalTurnsPlayed }}</strong
+        ><small>{{
+          data.competition.finalStagePlayed ? 'Final disputada' : 'Sin turnos de final'
+        }}</small>
+      </article>
+    </section>
+    <details class="panel details">
+      <summary>Detalle del cierre</summary>
+      <p>Torneo: {{ data.attemptId }}</p>
+      <p>Desenlace: {{ data.endingCode }}</p>
+      <p *ngIf="data.terminalReasonCode">Motivo: {{ data.terminalReasonCode }}</p>
+    </details>
+    <section aria-labelledby="awards-title">
+      <h2 id="awards-title">Premios oficiales</h2>
+      <p class="muted">
+        Elegibilidad desde cuartos de final. Los ganadores y criterios son los publicados por la
+        Game API.
+      </p>
+      <div class="awards-grid">
+        <article *ngFor="let award of data.awards" class="panel award">
+          <span class="eyebrow">{{ award.code }}</span>
+          <h3>{{ award.label }}</h3>
+          <ng-container *ngIf="award.winner as winner; else noWinner">
+            <img
+              [src]="portrait(winner.heroId)"
+              [alt]="heroName(winner.heroId)"
+              (error)="imageError($event)"
+              width="72"
+              height="72"
+            />
+            <h4>{{ heroName(winner.heroId) }}</h4>
+            <p>{{ teamName(winner.teamId) }}</p>
+          </ng-container>
+          <ng-template #noWinner><h4>Sin ganador</h4></ng-template>
+          <p>{{ award.reason }}</p>
+          <small>{{ award.explanation }}</small>
+          <p *ngIf="award.winningFacts as facts" class="award-score">
+            {{ facts.metricCode }}: {{ facts.value | number: '1.0-2' }}
+          </p>
+        </article>
+      </div>
+      <p *ngIf="!data.awards.length" class="panel">La API no publicó premios para este torneo.</p>
+    </section>
+    <section class="panel" aria-labelledby="stats-title">
+      <div class="section-heading">
+        <h2 id="stats-title">Estadísticas por equipo</h2>
+        <label
+          >Filtrar estadísticas por equipo<select [(ngModel)]="teamFilter">
+            <option value="">Todos los equipos</option>
+            <option *ngFor="let team of data.teamStatistics" [value]="team.teamId">
+              {{ teamName(team.teamId)
+              }}{{ team.teamId === data.configuredTeamId ? ' · Tu equipo' : '' }}
+            </option>
+          </select></label
+        >
+      </div>
+      <div
+        class="table-scroll"
+        tabindex="0"
+        role="region"
+        aria-label="Estadísticas de equipos; desplazar horizontalmente"
+      >
+        <table>
+          <caption>
+            Totales oficiales por equipo
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Equipo</th>
+              <th scope="col">Encuentros</th>
+              <th scope="col">Victorias</th>
+              <th scope="col">Empates</th>
+              <th scope="col">Derrotas</th>
+              <th scope="col">Daño causado</th>
+              <th scope="col">Daño recibido</th>
+              <th scope="col">Curación</th>
+              <th scope="col">KO causados</th>
+              <th scope="col">KO sufridos</th>
+              <th scope="col">Especiales</th>
+              <th scope="col">Acciones de equipo</th>
+              <th scope="col">Habilidades de líder</th>
+              <th scope="col">Puntos ganados</th>
+              <th scope="col">Puntos gastados</th>
+              <th scope="col">Potenciadores</th>
+              <th scope="col">Mejoras</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let team of teams" [class.own-team]="team.teamId === data.configuredTeamId">
+              <th scope="row">{{ teamName(team.teamId) }}</th>
+              <td>{{ team.encounters }}</td>
+              <td>{{ team.wins }}</td>
+              <td>{{ team.draws }}</td>
+              <td>{{ team.losses }}</td>
+              <td>{{ team.damageDealt }}</td>
+              <td>{{ team.damageReceived }}</td>
+              <td>{{ team.healing }}</td>
+              <td>{{ team.kosCaused }}</td>
+              <td>{{ team.kosSuffered }}</td>
+              <td>{{ team.specialsUsed }}</td>
+              <td>{{ team.teamActionsUsed }}</td>
+              <td>{{ team.leaderAbilitiesUsed }}</td>
+              <td>{{ team.rewardPointsEarned }}</td>
+              <td>{{ team.rewardPointsSpent }}</td>
+              <td>{{ team.powerUpsUsed }}</td>
+              <td>{{ team.statGains }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p *ngIf="!teams.length">No hay estadísticas de equipos para este filtro.</p>
+    </section>
+    <section class="panel" aria-labelledby="heroes-title">
+      <div class="section-heading">
+        <h2 id="heroes-title">Estadísticas por héroe</h2>
+        <div class="filters">
+          <label
+            >Etapa<select [(ngModel)]="phase">
+              <option value="totals">Torneo completo</option>
+              <option value="journey">Camino</option>
+              <option value="finalStage">Batalla Final</option>
+            </select></label
+          >
+          <label
+            >Ordenar de mayor a menor<select [(ngModel)]="metric">
+              <option *ngFor="let item of metrics" [value]="item.key">{{ item.label }}</option>
+            </select></label
+          >
+        </div>
+      </div>
+      <p class="muted">
+        Cada héroe se identifica junto a su equipo. El filtro y el orden no alteran los premios
+        oficiales.
+      </p>
+      <div
+        class="table-scroll"
+        tabindex="0"
+        role="region"
+        aria-label="Estadísticas de héroes; desplazar horizontalmente"
+      >
+        <table>
+          <caption>
+            Rendimiento por héroe y equipo
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Héroe</th>
+              <th scope="col">Equipo</th>
+              <th scope="col">Elegible para premios</th>
+              <th scope="col" *ngFor="let item of metrics">{{ item.label }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let hero of heroes"
+              [class.own-team]="hero.teamId === data.configuredTeamId"
+            >
+              <th scope="row">{{ heroName(hero.heroId) }}</th>
+              <td>{{ teamName(hero.teamId) }}</td>
+              <td>{{ hero.eligible ? 'Sí' : 'No' }}</td>
+              <td *ngFor="let item of metrics">{{ hero[phase][item.key] }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p *ngIf="!heroes.length">No hay estadísticas de héroes para este filtro.</p>
+    </section>
+  </ng-container>
 </main>

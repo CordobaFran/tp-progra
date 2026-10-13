@@ -20,6 +20,7 @@
         <p><strong>Estrategia:</strong> {{ item.spendingStrategyCode }}</p>
         <p><strong>Resultado (outcomeCode):</strong> {{ item.outcomeCode }}</p>
         <p><strong>Resumen:</strong> {{ item.endingSummary }}</p>
+        <a routerLink="/results/awards" [queryParams]="{ attemptId: item.attemptId }">Ver estadísticas y premios</a>
       </div>
     </div>
   </div>
