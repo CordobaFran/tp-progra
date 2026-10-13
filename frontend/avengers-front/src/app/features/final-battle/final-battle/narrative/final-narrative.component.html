@@ -1,0 +1,81 @@
+<section
+  class="final-narrative"
+  [attr.aria-label]="translate('r9.liveNarrative')"
+  [attr.aria-busy]="view.status === 'loading'"
+>
+  <header class="narrative-header">
+    <h2 class="panel-title">{{ translate('r9.liveNarrative') }}</h2>
+  </header>
+  <app-loading-state
+    *ngIf="view.status === 'loading'"
+    [message]="translate('loading')"
+  ></app-loading-state>
+  <ng-container *ngIf="view.status === 'error'">
+    <app-error-state
+      [message]="view.error ?? translate('error')"
+      [messageCode]="view.errorCode ?? null"
+    ></app-error-state>
+    <button type="button" class="button" (click)="requestRetry()">{{ translate('retry') }}</button>
+  </ng-container>
+  <ng-container *ngIf="view.status === 'data' || view.status === 'empty'">
+    <ng-container *ngIf="view.state as state; else unavailable">
+      <div class="narrative-state" aria-live="polite">
+        <p>
+          <strong>{{ translate('r9.status') }}:</strong>
+          {{
+            translate(
+              state.status === 'READY'
+                ? 'r10.ready'
+                : state.status === 'ACTIVE'
+                  ? 'r10.active'
+                  : 'r10.completed'
+            )
+          }}
+        </p>
+        <p>
+          <strong>{{ translate('r9.phase') }}:</strong> {{ state.phaseLabel }}
+        </p>
+        <p>
+          <strong>{{ translate('r9.turn') }}:</strong> {{ state.normalTurn }}
+        </p>
+      </div>
+      <app-empty-state
+        *ngIf="orderedEvents.length === 0"
+        [message]="translate('r10.emptyEvents')"
+      ></app-empty-state>
+      <ol
+        class="event-list"
+        *ngIf="orderedEvents.length > 0"
+        [attr.aria-label]="translate('r9.events')"
+      >
+        <li *ngFor="let entry of orderedEvents; trackBy: trackEvent">
+          <article class="functional-panel narrative-event">
+            <div class="event-meta">
+              <span>{{ translate('r10.turn', { turn: entry.event.turn }) }}</span>
+              <span>{{ translate('r10.sequence') }}: {{ entry.event.sequence }}</span>
+            </div>
+            <h3 class="panel-title">
+              {{ translate('r10.eventType') }}: {{ entry.event.eventCode }}
+            </h3>
+            <p>{{ translate('r9.phase') }}: {{ entry.event.phase }}</p>
+            <dl class="published-facts" *ngIf="entry.facts.length > 0">
+              <ng-container *ngFor="let fact of entry.facts; trackBy: trackFact">
+                <dt>{{ translate(fact.label) }}</dt>
+                <dd>{{ fact.value }}</dd>
+              </ng-container>
+            </dl>
+            <app-narrative-renderer
+              *ngIf="entry.event.narrative as narrative"
+              [lines]="narrative.lines"
+              [ariaLabel]="translate('r10.narrative')"
+            ></app-narrative-renderer>
+          </article>
+        </li>
+      </ol>
+    </ng-container>
+  </ng-container>
+  <ng-template #unavailable>
+    <app-empty-state [message]="translate('r10.noBattleCopy')"></app-empty-state>
+    <a routerLink="/journey/simulate">{{ translate('r10.simulateLink') }}</a>
+  </ng-template>
+</section>

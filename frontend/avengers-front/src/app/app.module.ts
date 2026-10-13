@@ -20,6 +20,7 @@ import { NarrativeRendererComponent } from './shared/narrative/narrative-rendere
 import { TeamJourneyComponent } from './features/journey/team-journey/team-journey.component';
 import { FinalPreparationComponent } from './features/final-battle/final-preparation/final-preparation.component';
 import { FinalBattleComponent } from './features/final-battle/final-battle/final-battle.component';
+import { FinalNarrativeComponent } from './features/final-battle/final-battle/narrative/final-narrative.component';
 import { LiveEventsComponent } from './features/final-battle/live-events/live-events.component';
 import { TeamStatusComponent } from './features/final-battle/team-status/team-status.component';
 import { AwardsComponent } from './features/results/awards/awards.component';
@@ -44,6 +45,7 @@ import { HistoryComponent } from './features/results/history/history.component';
     TeamJourneyComponent,
     FinalPreparationComponent,
     FinalBattleComponent,
+    FinalNarrativeComponent,
     LiveEventsComponent,
     TeamStatusComponent,
     AwardsComponent,

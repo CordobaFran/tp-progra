@@ -3,7 +3,14 @@ import { ApplicationContextService } from '../../basic/services/application-cont
 import { GameApiService } from '../../basic/game-api.service';
 import { ErrorUtils } from '../../basic/error/error.utils';
 import { ErrorCode } from '../../basic/error/error-code.enum';
-import { FinalStageEventsApi, FinalStageStateApi } from './model/final-stage-api.model';
+import {
+  FinalStageEventsApi,
+  FinalStageStateApi,
+  FinalStageTeamsApi,
+  FinalStageActionsApi,
+  FinalStageCommandApi,
+  FinalStageReceiptApi,
+} from './model/final-stage-api.model';
 
 @Injectable()
 export class FinalStageService {
@@ -30,6 +37,39 @@ export class FinalStageService {
   async getEvents(): Promise<FinalStageEventsApi> {
     try {
       return await this.api.get<FinalStageEventsApi>(`${this.path()}/events`, {
+        lang: this.context.language,
+      });
+    } catch (error: unknown) {
+      this.mapError(error);
+    }
+  }
+
+  async getTeams(): Promise<FinalStageTeamsApi> {
+    try {
+      return await this.api.get<FinalStageTeamsApi>(`${this.path()}/teams`);
+    } catch (error: unknown) {
+      this.mapError(error);
+    }
+  }
+
+  async getActions(actionCode?: string): Promise<FinalStageActionsApi> {
+    try {
+      return await this.api.get<FinalStageActionsApi>(`${this.path()}/actions`, {
+        lang: this.context.language,
+        actionCode,
+      });
+    } catch (error: unknown) {
+      this.mapError(error);
+    }
+  }
+
+  async play(command: FinalStageCommandApi): Promise<FinalStageReceiptApi> {
+    try {
+      const body =
+        command.type === 'CHOOSE_ACTION'
+          ? { type: command.type, actionId: command.actionId }
+          : { type: command.type };
+      return await this.api.post<FinalStageReceiptApi>(`${this.path()}/play`, body, {
         lang: this.context.language,
       });
     } catch (error: unknown) {

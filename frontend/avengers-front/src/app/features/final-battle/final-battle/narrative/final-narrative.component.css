@@ -1,0 +1,69 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.final-narrative {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+.narrative-header h2,
+.narrative-state p,
+.narrative-event h3,
+.narrative-event p {
+  margin: 0;
+}
+.narrative-header h2 {
+  color: var(--color-gold);
+}
+.narrative-state,
+.narrative-event {
+  display: grid;
+  gap: 0.65rem;
+}
+.narrative-state {
+  padding: var(--panel-padding);
+  border: 1px solid var(--color-panel-border);
+  background: var(--color-panel);
+}
+.narrative-event {
+  padding: var(--panel-padding);
+}
+.event-list {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.event-list li {
+  min-width: 0;
+}
+.event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+.published-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.4rem 0.75rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+.published-facts dt {
+  color: var(--color-muted);
+}
+.published-facts dd {
+  min-width: 0;
+  margin: 0;
+}
+.button {
+  justify-self: start;
+}
