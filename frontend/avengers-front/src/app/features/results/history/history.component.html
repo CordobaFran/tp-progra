@@ -1,28 +1,127 @@
 <main class="student-feature-shell">
-  <div [ngSwitch]="pageState.status">
-    <div *ngSwitchCase="'loading'">
+  <div class="history-page" [ngSwitch]="pageState.status">
+    <div *ngSwitchCase="'loading'" class="feedback-message-box">
       <h2>Cargando</h2>
     </div>
-    <div *ngSwitchCase="'error'">
+
+    <div *ngSwitchCase="'error'" class="feedback-message-box error-alert">
       <h2>Error al cargar el historial</h2>
       <p>{{ pageState.error }}</p>
+      <button class="student-general-btn" (click)="retry()">Reintentar Conexión</button>
     </div>
 
-    <div *ngSwitchCase="'empty'">
+    <div *ngSwitchCase="'empty'" class="feedback-message-box empty-alert">
       <h2>El Team Hulk no registra torneos</h2>
+      <button class="student-general-btn" (click)="retry()">Reintentar Conexión</button>
     </div>
 
-    <div *ngSwitchCase="'data'">
-      <h2>Torneos Completados (Historial)</h2>
-      
-      <div *ngFor="let item of pageState.data">
-        <p><strong>ID del Torneo (attemptId):</strong> {{ item.attemptId }}</p>
-        <p><strong>Estrategia:</strong> {{ item.spendingStrategyCode }}</p>
-        <p><strong>Resultado (outcomeCode):</strong> {{ item.outcomeCode }}</p>
-        <p><strong>Resumen:</strong> {{ item.endingSummary }}</p>
-        <a routerLink="/results/awards" [queryParams]="{ attemptId: item.attemptId }">Ver estadísticas y premios</a>
+    <div *ngSwitchCase="'data'" class="history-workspace">
+
+      <!-- LIST VIEW -->
+      <div class="table-panel" *ngIf="pageState.viewMode === 'list'">
+        <header class="feature-section-header">
+          <h2>Torneos Completados (Historial)</h2>
+          <p>Consulta las incursiones previas y su estrategia asociada</p>
+        </header>
+
+        <div class="table-scroll">
+          <table class="student-data-table">
+            <thead>
+              <tr>
+                <th>ID del Torneo</th>
+                <th>Estrategia Utilizada</th>
+                <th>Resultado Final</th>
+                <th>Resumen Ejecutivo</th>
+                <th>Inspeccionar</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of pageState.data">
+                <td>
+                  <code>{{ item.attemptId }}</code>
+                </td>
+                <td>
+                  <span class="strategy-badge">{{ item.spendingStrategyCode }}</span>
+                </td>
+                <td>
+                  <strong>{{ item.outcomeCode || 'INCOMPLETO' }}</strong>
+                </td>
+                <td>{{ item.endingSummary || 'Sin resumen registrado.' }}</td>
+                <td>
+                  <button class="btn-table-action" (click)="onSelectAttempt(item.attemptId)">
+                    Detalle
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DETAIL VIEW-->
+      <div class="detail-panel" *ngIf="pageState.viewMode === 'detail'">
+        <header class="detail-navigation-bar">
+          <button class="btn-back-arrow" (click)="onBack()">Volver al listado</button>
+          <div class="detail-main-title">
+            <h3>
+              Registro Histórico del Intento: <code>{{ pageState.selectedDetail?.attemptId }}</code>
+            </h3>
+          </div>
+        </header>
+
+        <div class="multiverse-history-dashboard">
+          <!-- Resumen General -->
+          <article class="dashboard-metric-card" *ngIf="pageState.selectedDetail.summary">
+            <h5>Métricas Base del Ciclo</h5>
+            <div class="card-interior-content">
+              <p><strong>Estrategia de Gastos:</strong> {{ pageState.selectedDetail.summary.spendingStrategyCode }}</p>
+              <p><strong>Código de Cierre:</strong> {{ pageState.selectedDetail.summary.completionOutcome || 'N/A' }}</p>
+              <p><strong>Estado del Lifecycle:</strong> {{ pageState.selectedDetail.summary.status }}</p>
+            </div>
+          </article>
+
+          <!-- Equipos e Integrantes -->
+          <article class="dashboard-metric-card">
+            <h5>Equipos y Formaciones en la Incursión</h5>
+            <div class="card-interior-content scroll-container-box">
+              <ul>
+                <li *ngFor="let team of pageState.selectedDetail?.teams" class="team-snapshot-row">
+                  <strong>{{ team.name }}</strong> <small>({{ team.teamId }})</small>
+                  <br />
+                  <small class="text-muted"
+                    >Estrategia: {{ team.strategyCode }} | Reward Points:
+                    {{ team.rewardPoints }}</small
+                  >
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Bitácora Cronológica de Eventos -->
+          <article class="dashboard-metric-card">
+            <h5>Línea Temporal de Eventos Facturales</h5>
+            <div class="card-interior-content scroll-container-box telemetry-console">
+              <div *ngFor="let event of pageState.selectedDetail?.events" class="telemetry-line">
+                <span class="seq-tag">[Sec {{ event.sequence }}]</span>
+                <span class="stage-tag">Stage: {{ event.stageCode }}</span>
+                <span *ngIf="event.encounterId">
+                  - Encounter: <code>{{ event.encounterId }}</code></span
+                >
+              </div>
+            </div>
+          </article>
+
+          <!-- Estado Estadístico Global -->
+          <article class="dashboard-metric-card">
+            <h5>Auditoría de Incursiones</h5>
+            <div class="card-interior-content" *ngIf="pageState.selectedDetail.statistics">
+              <p><strong>Encuentros Totales Jugados:</strong> {{ pageState.selectedDetail.statistics.competition.journeyEncounters || 0 }}</p>
+              <p><strong>Simulación Final Completada:</strong> {{ pageState.selectedDetail.statistics.competition.finalStagePlayed ? 'Sí' : 'No' }}</p>
+              <p><strong>Turnos de Combate Ejecutados:</strong> {{ pageState.selectedDetail.statistics.competition.finalStageNormalTurnsPlayed || 0 }}</p>
+            </div>
+          </article>
+        </div>
       </div>
     </div>
   </div>
 </main>
-
