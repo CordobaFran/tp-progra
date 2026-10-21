@@ -1,32 +1,192 @@
 <main class="history-rivals-page">
-  <header>
+  <header class="page-header">
     <span class="caption-box">{{ translate('historyRivals.caption', pageState.lang) }}</span>
     <h1 class="page-title">{{ translate('historyRivals.title', pageState.lang) }}</h1>
     <p class="page-subtitle">{{ translate('historyRivals.subtitle', pageState.lang) }}</p>
   </header>
 
-  <section class="functional-panel" aria-live="polite">
-    <app-loading-state
-      *ngIf="pageState.status === 'loading'"
-      [message]="translate('historyRivals.loading', pageState.lang)"
-    ></app-loading-state>
-    <app-error-state
-      *ngIf="pageState.status === 'error'"
-      [message]="pageState.error ?? translate('error', pageState.lang)"
-      [messageCode]="pageState.errorCode ?? null"
-    ></app-error-state>
-    <app-empty-state
-      *ngIf="pageState.status === 'empty'"
-      [message]="translate('historyRivals.noTeamHeroes', pageState.lang)"
-    ></app-empty-state>
-    <pre *ngIf="pageState.status === 'data'">{{ pageState.data | json }}</pre>
-    <button
-      *ngIf="pageState.status === 'error'"
-      type="button"
-      class="button button-secondary"
-      (click)="retry()"
-    >
-      {{ translate('retry', pageState.lang) }}
-    </button>
-  </section>
+  <app-loading-state
+    *ngIf="pageState.status === 'loading'"
+    [message]="translate('historyRivals.loading', pageState.lang)"
+  ></app-loading-state>
+  <app-error-state
+    *ngIf="pageState.status === 'error'"
+    [message]="pageState.error ?? translate('error', pageState.lang)"
+    [messageCode]="pageState.errorCode ?? null"
+  ></app-error-state>
+  <button
+    *ngIf="pageState.status === 'error'"
+    type="button"
+    class="button button-secondary retry-button"
+    (click)="retry()"
+  >
+    {{ translate('retry', pageState.lang) }}
+  </button>
+  <app-empty-state
+    *ngIf="pageState.status === 'empty'"
+    [message]="translate('historyRivals.noTeamHeroes', pageState.lang)"
+  ></app-empty-state>
+
+  <div class="workspace" *ngIf="pageState.status === 'data' && pageState.data as data">
+    <div class="selection-column">
+      <section class="functional-panel" aria-labelledby="team-heading">
+        <h2 class="panel-title" id="team-heading">
+          {{ translate('historyRivals.yourTeam', pageState.lang) }}
+        </h2>
+        <ul class="hero-list">
+          <li *ngFor="let hero of data.heroes; trackBy: trackById">
+            <button
+              type="button"
+              class="hero-button"
+              [class.selected]="hero.id === pageState.selectedHeroId"
+              [attr.aria-pressed]="hero.id === pageState.selectedHeroId"
+              (click)="onHeroSelect(hero.id)"
+            >
+              <img
+                [src]="portraitPath(hero.id)"
+                alt=""
+                loading="lazy"
+                (error)="imageError($event)"
+              />
+              <span class="hero-name">{{ hero.displayName }}</span>
+              <span class="hero-badge" *ngIf="hero.leader">
+                {{ translate('historyRivals.leader', pageState.lang) }}
+              </span>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <section class="functional-panel" aria-labelledby="rivals-heading">
+        <h2 class="panel-title" id="rivals-heading">
+          {{ translate('historyRivals.rivalsFor', pageState.lang) }}
+          {{ selectedHero?.displayName }}
+        </h2>
+        <ul class="hero-list" *ngIf="selectedHero?.rivals?.length; else noRivals">
+          <li *ngFor="let rival of selectedHero?.rivals; trackBy: trackById">
+            <button
+              type="button"
+              class="hero-button"
+              [class.selected]="rival.id === pageState.selectedRivalId"
+              [attr.aria-pressed]="rival.id === pageState.selectedRivalId"
+              (click)="onRivalSelect(rival.id)"
+            >
+              <img
+                [src]="portraitPath(rival.id)"
+                alt=""
+                loading="lazy"
+                (error)="imageError($event)"
+              />
+              <span class="hero-name">{{ rival.displayName }}</span>
+            </button>
+          </li>
+        </ul>
+        <ng-template #noRivals>
+          <app-empty-state
+            [message]="
+              translate('historyRivals.noRivals', pageState.lang) +
+              '. ' +
+              translate('historyRivals.noRivalsCopy', pageState.lang)
+            "
+          ></app-empty-state>
+        </ng-template>
+      </section>
+    </div>
+
+    <section class="functional-panel history-panel" aria-labelledby="history-heading">
+      <div class="panel-heading-row">
+        <h2 class="panel-title" id="history-heading">
+          {{ translate('historyRivals.battleHistory', pageState.lang) }}
+        </h2>
+        <label class="journey-field" *ngIf="data.currentJourney || data.completedJourneys.length">
+          <span>{{ translate('historyRivals.journey', pageState.lang) }}</span>
+          <select #journeySelect (change)="onJourneyChange(journeySelect.value)">
+            <option
+              *ngIf="data.currentJourney"
+              value="current"
+              [selected]="pageState.selectedJourneyId === 'current'"
+            >
+              {{ translate('historyRivals.currentJourney', pageState.lang) }}
+            </option>
+            <option
+              *ngFor="let journey of data.completedJourneys"
+              [value]="journey.attemptId"
+              [selected]="pageState.selectedJourneyId === journey.attemptId"
+            >
+              {{ journey.completedAt | date: 'short' }} · {{ journey.opponentFinalistName }}
+            </option>
+          </select>
+        </label>
+      </div>
+
+      <app-loading-state
+        *ngIf="pageState.encounters.status === 'loading'"
+        [message]="translate('historyRivals.loading', pageState.lang)"
+      ></app-loading-state>
+      <app-error-state
+        *ngIf="pageState.encounters.status === 'error'"
+        [message]="pageState.encounters.error ?? translate('error', pageState.lang)"
+        [messageCode]="pageState.encounters.errorCode ?? null"
+      ></app-error-state>
+      <ng-container *ngIf="pageState.encounters.status === 'empty'">
+        <app-empty-state
+          *ngIf="!pageState.selectedRivalId; else noBattles"
+          [message]="translate('historyRivals.noRivalSelectedCopy', pageState.lang)"
+        ></app-empty-state>
+        <ng-template #noBattles>
+          <app-empty-state
+            [message]="
+              translate('historyRivals.noBattles', pageState.lang) +
+              '. ' +
+              translate('historyRivals.noBattlesCopy', pageState.lang)
+            "
+          ></app-empty-state>
+        </ng-template>
+      </ng-container>
+
+      <ol class="encounter-list" *ngIf="pageState.encounters.status === 'data'">
+        <li
+          *ngFor="let encounter of pageState.encounters.data?.encounters; trackBy: trackEncounter"
+        >
+          <article class="encounter-card">
+            <header class="encounter-header">
+              <h3 class="encounter-stage">{{ stageLabel(encounter) }}</h3>
+              <span
+                class="encounter-result"
+                *ngIf="encounter.heroTeamResult as result"
+                [class.win]="result === 'WIN'"
+                [class.loss]="result === 'LOSS'"
+              >
+                {{ resultLabel(result) }}
+              </span>
+            </header>
+            <p class="matchup">
+              <strong>{{ encounter.heroTeam.name }}</strong>
+              <span class="versus">{{ translate('historyRivals.versus', pageState.lang) }}</span>
+              <strong>{{ encounter.rivalTeam.name }}</strong>
+            </p>
+            <p class="winner" *ngIf="winnerName(encounter) as winner">
+              {{ translate('historyRivals.winner', pageState.lang) }}: {{ winner }}
+            </p>
+            <dl class="damage">
+              <div>
+                <dt>{{ encounter.heroTeam.name }}</dt>
+                <dd>
+                  {{ translate('historyRivals.damage', pageState.lang) }}:
+                  {{ encounter.heroTeamDamage ?? '—' }}
+                </dd>
+              </div>
+              <div>
+                <dt>{{ encounter.rivalTeam.name }}</dt>
+                <dd>
+                  {{ translate('historyRivals.damage', pageState.lang) }}:
+                  {{ encounter.rivalTeamDamage ?? '—' }}
+                </dd>
+              </div>
+            </dl>
+          </article>
+        </li>
+      </ol>
+    </section>
+  </div>
 </main>
