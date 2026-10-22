@@ -25,17 +25,11 @@ export class TeamConfigService {
     const companionIds = datos.companionIds || [];
     const activeHeroIds = datos.activeHeroIds || [];
 
-    // Calculamos los inactivos: miembros del equipo (líder + acompañantes) que NO están activos
-    const allHeroIds = [datos.leaderId, ...companionIds];
-    const inactiveHeroIds = allHeroIds.filter((id) => !activeHeroIds.includes(id));
-
-    // Llamamos al método PUT de GameFeatureApiService con la estructura exacta que espera
-    return await this.gameApi.saveConfiguration(teamId, {
-      leaderId: datos.leaderId,
+    // Llamamos al método PUT enviando la whitelist exacta que exige la Game API
+    return await (this.gameApi.saveConfiguration as any)(teamId, {
       companionIds: companionIds,
       activeHeroIds: activeHeroIds,
-      inactiveHeroIds: inactiveHeroIds,
-      strategyCode: datos.strategy as unknown as string,
+      strategy: datos.strategy || 'BALANCED',
     });
   }
 }
