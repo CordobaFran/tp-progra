@@ -1,7 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { GameFeatureApiService } from 'src/basic/game-feature-api.service';
-import { ApplicationContextService } from 'src/basic/services/application-context.service';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { GameFeatureApiService } from '../../basic/game-feature-api.service';
+import { ApplicationContextService } from '../../basic/services/application-context.service';
 import { KnockoutStageModel, KnockoutTeamModel } from './model/knockout-stage.model';
+import { ApiErrorMappingRule, ApiErrorStatusMap, ErrorUtils } from '../../basic/error/error.utils';
+import { ErrorCode } from '../../basic/error/error-code.enum';
+
+const KNOCKOUT_STAGE_API_ERROR_STATUS_MAP: ApiErrorStatusMap = {
+  [HttpStatus.NOT_FOUND]: {
+    messageCode: ErrorCode.KNOCKOUT_STAGE_UNAVAILABLE,
+    message: 'Knockout stage is not available right now.',
+  },
+  [HttpStatus.CONFLICT]: {
+    messageCode: ErrorCode.KNOCKOUT_STAGE_UNAVAILABLE,
+    message: 'Knockout stage is not available right now.',
+  },
+};
+
+const KNOCKOUT_STAGE_API_ERROR_FALLBACK: ApiErrorMappingRule = {
+  messageCode: ErrorCode.KNOCKOUT_STAGE_UNAVAILABLE,
+  message: 'Unable to load the Knockout stage right now.',
+};
 
 @Injectable()
 export class KnockoutStageService {
@@ -19,7 +37,7 @@ export class KnockoutStageService {
         this.game.knockoutEncounters(teamId),
       ]);
 
-      const teams: KnockoutTeamModel[] = teamsData.teams.map((team) => ({
+      const teams: KnockoutTeamModel[] = (teamsData.teams ?? []).map((team) => ({
         ...team,
         isPlayerTeam: team.teamId === teamId,
       }));
@@ -30,8 +48,11 @@ export class KnockoutStageService {
       };
       return result;
     } catch (error) {
-      //Implementar manejo de errores
-      throw error;
+      ErrorUtils.mapGameApiError(
+        error,
+        KNOCKOUT_STAGE_API_ERROR_STATUS_MAP,
+        KNOCKOUT_STAGE_API_ERROR_FALLBACK,
+      );
     }
   }
 }

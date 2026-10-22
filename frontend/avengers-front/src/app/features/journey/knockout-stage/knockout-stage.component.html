@@ -1,32 +1,239 @@
-<main class="student-feature-shell">
-  <h2>Fase Eliminatoria (R6)</h2>
+<main class="knockout-page">
+  <header class="r6-header">
+    <span class="caption-box">{{ translate('r6.caption') }}</span>
+    <div class="r6-title-row">
+      <h1 class="page-title">{{ translate('r6.title') }}</h1>
+    </div>
+    <p class="page-subtitle">{{ translate('r6.subtitle') }}</p>
+  </header>
 
-  <div *ngIf="pageState.status === 'loading'">
-    <p>Cargando datos del torneo...</p>
-  </div>
+  <div class="knockout-workspace">
+    <app-loading-state
+      *ngIf="pageState.status === 'loading'"
+      [message]="translate('loading')"
+    ></app-loading-state>
 
-  <div *ngIf="pageState.status === 'error'" style="color: red">
-    <p>Ocurrió un error: {{ pageState.error }}</p>
-    <p *ngIf="pageState.errorCode">Código: {{ pageState.errorCode }}</p>
-    <button (click)="retry()">Reintentar</button>
-  </div>
+    <app-error-state
+      *ngIf="pageState.status === 'error'"
+      [message]="pageState.error ?? translate('error')"
+      [messageCode]="pageState.errorCode ?? null"
+    ></app-error-state>
+    <button
+      *ngIf="pageState.status === 'error'"
+      type="button"
+      class="button button-secondary retry-button"
+      (click)="retry()"
+    >
+      {{ translate('retry') }}
+    </button>
 
-  <div *ngIf="pageState.status === 'empty'">
-    <p>No se encontraron datos para la fase eliminatoria.</p>
-  </div>
+    <app-empty-state
+      *ngIf="pageState.status === 'empty'"
+      [message]="translate('r6.noJourney')"
+    ></app-empty-state>
 
-  <div *ngIf="pageState.status === 'data'">
-    <p style="color: #4ade80"><strong>Conexión exitosa con el backend</strong></p>
-    <pre
-      style="
-        background: #1e1e1e;
-        color: #d4d4d4;
-        padding: 1rem;
-        border-radius: 6px;
-        overflow: auto;
-        max-height: 500px;
-      "
-      >{{ pageState.data | json }}
-    </pre>
+    <section
+      class="functional-panel knockout-panel"
+      aria-labelledby="stages-heading"
+      *ngIf="pageState.status === 'data'"
+    >
+      <div class="panel-heading-row">
+        <h2 class="panel-title" id="stages-heading">
+          {{ translate('r6.stages') }}
+        </h2>
+      </div>
+
+      <div class="knockout-tools">
+        <div class="stage-filters" role="group" [attr.aria-label]="translate('r6.stages')">
+          <button
+            *ngFor="let tab of stageTabs"
+            type="button"
+            class="filter-button"
+            [class.active]="pageState.selectedStage === tab.code"
+            [attr.aria-pressed]="pageState.selectedStage === tab.code"
+            (click)="onStageSelect(tab.code)"
+          >
+            {{ translate(tab.key) }}
+          </button>
+        </div>
+      </div>
+
+      <section class="knockout-scroll" aria-label="Partidos de la fase">
+        <app-empty-state
+          *ngIf="!isFinalStage && currentRound?.matches?.length === 0"
+          [message]="translate('r6.pending')"
+        ></app-empty-state>
+        <div class="matches-grid" *ngIf="!isFinalStage && currentRound as round">
+          <article *ngFor="let match of round.matches; trackBy: trackMatch" class="match-card">
+            <header class="match-card-header">
+              <span class="match-title">{{ translate('r6.match') }} {{ match.slot }}</span>
+              <span
+                class="status-tag"
+                [class.played]="match.winnerTeamId"
+                [class.pending]="!match.winnerTeamId"
+              >
+                {{ match.winnerTeamId ? translate('r6.played') : translate('r6.pending') }}
+              </span>
+            </header>
+
+            <div class="match-teams">
+              <div
+                class="team-item"
+                [class.is-winner]="match.winnerTeamId === match.teamAId"
+                [class.is-player-team]="getTeam(match.teamAId)?.isPlayerTeam"
+              >
+                <div class="team-meta">
+                  <div class="portrait-cell">
+                    <img
+                      [src]="getPortraitPath(getTeamLeaderId(match.teamAId))"
+                      [alt]="getTeam(match.teamAId)?.name ?? ''"
+                      (error)="imageError($event)"
+                      loading="lazy"
+                    />
+                    <span
+                      class="player-star-badge"
+                      *ngIf="getTeam(match.teamAId)?.isPlayerTeam"
+                      [title]="translate('r6.yourTeam')"
+                      aria-hidden="true"
+                      >★</span
+                    >
+                  </div>
+
+                  <div class="team-details">
+                    <span class="team-name">{{ getTeam(match.teamAId)?.name }}</span>
+                    <span class="winner-tag" *ngIf="match.winnerTeamId === match.teamAId">
+                      {{ translate('r6.winner') }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="team-stats" *ngIf="match.winnerTeamId">
+                  <small>{{ translate('r6.damage') }}</small>
+                  <strong>{{
+                    getTeamDamage(getEncounterSummary(match.encounterId), match.teamAId)
+                  }}</strong>
+                </div>
+              </div>
+
+              <div class="match-divider" aria-hidden="true">VS</div>
+
+              <div
+                class="team-item"
+                [class.is-winner]="match.winnerTeamId === match.teamBId"
+                [class.is-player-team]="getTeam(match.teamBId)?.isPlayerTeam"
+              >
+                <div class="team-meta">
+                  <div class="portrait-cell">
+                    <img
+                      [src]="getPortraitPath(getTeamLeaderId(match.teamBId))"
+                      [alt]="getTeam(match.teamBId)?.name ?? ''"
+                      (error)="imageError($event)"
+                      loading="lazy"
+                    />
+                    <span
+                      class="player-star-badge"
+                      *ngIf="getTeam(match.teamBId)?.isPlayerTeam"
+                      [title]="translate('r6.yourTeam')"
+                      aria-hidden="true"
+                      >★</span
+                    >
+                  </div>
+
+                  <div class="team-details">
+                    <span class="team-name">{{ getTeam(match.teamBId)?.name }}</span>
+                    <span class="winner-tag" *ngIf="match.winnerTeamId === match.teamBId">
+                      {{ translate('r6.winner') }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="team-stats" *ngIf="match.winnerTeamId">
+                  <small>{{ translate('r6.damage') }}</small>
+                  <strong>{{
+                    getTeamDamage(getEncounterSummary(match.encounterId), match.teamBId)
+                  }}</strong>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="final-stage-wrapper" *ngIf="isFinalStage">
+          <article class="match-card final-match-card">
+            <header class="match-card-header">
+              <span class="match-title">{{ translate('r6.final') }}</span>
+              <span
+                class="status-tag"
+                [class.played]="!isFinalPending"
+                [class.pending]="isFinalPending"
+                >{{ isFinalPending ? translate('r6.pending') : translate('r6.played') }}</span
+              >
+            </header>
+
+            <div class="match-teams">
+              <div class="team-item" [class.is-player-team]="finalists.playerTeam?.isPlayerTeam">
+                <div class="team-meta">
+                  <div class="portrait-cell">
+                    <ng-container *ngIf="finalists.playerTeam as pTeam">
+                      <img
+                        *ngIf="pTeam.leaderId"
+                        [src]="getPortraitPath(pTeam.leaderId)"
+                        [alt]="pTeam.name"
+                        (error)="imageError($event)"
+                        loading="lazy"
+                      />
+                      <span
+                        *ngIf="pTeam.isPlayerTeam"
+                        class="player-star-badge"
+                        [title]="translate('r6.yourTeam')"
+                        aria-hidden="true"
+                        >★</span
+                      >
+                    </ng-container>
+                  </div>
+
+                  <div class="team-details">
+                    <span class="team-name">
+                      {{ finalists.playerTeam?.name || '-' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="match-divider" aria-hidden="true">VS</div>
+
+              <div class="team-item" [class.is-player-team]="finalists.opponentTeam?.isPlayerTeam">
+                <div class="team-meta">
+                  <div class="portrait-cell">
+                    <ng-container *ngIf="finalists.opponentTeam as oTeam">
+                      <img
+                        *ngIf="oTeam.leaderId"
+                        [src]="getPortraitPath(oTeam.leaderId)"
+                        [alt]="oTeam.name"
+                        (error)="imageError($event)"
+                        loading="lazy"
+                      />
+                      <span
+                        *ngIf="oTeam.isPlayerTeam"
+                        class="player-star-badge"
+                        [title]="translate('r6.yourTeam')"
+                        aria-hidden="true"
+                        >★</span
+                      >
+                    </ng-container>
+                  </div>
+
+                  <div class="team-details">
+                    <span class="team-name">
+                      {{ finalists.opponentTeam?.name || '-' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </section>
   </div>
 </main>
