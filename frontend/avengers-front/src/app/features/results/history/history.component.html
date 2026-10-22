@@ -71,7 +71,7 @@
 
         <div class="multiverse-history-dashboard">
           <!-- Resumen General -->
-          <article class="dashboard-metric-card" *ngIf="pageState.selectedDetail.summary">
+          <article class="dashboard-metric-card" *ngIf="pageState.selectedDetail && pageState.selectedDetail.summary">
             <h5>Métricas Base del Ciclo</h5>
             <div class="card-interior-content">
               <p><strong>Estrategia de Gastos:</strong> {{ pageState.selectedDetail.summary.spendingStrategyCode }}</p>
@@ -114,7 +114,7 @@
           <!-- Estado Estadístico Global -->
           <article class="dashboard-metric-card">
             <h5>Auditoría de Incursiones</h5>
-            <div class="card-interior-content" *ngIf="pageState.selectedDetail.statistics">
+            <div class="card-interior-content" *ngIf="pageState.selectedDetail && pageState.selectedDetail.statistics">
               <p><strong>Encuentros Totales Jugados:</strong> {{ pageState.selectedDetail.statistics.competition.journeyEncounters || 0 }}</p>
               <p><strong>Simulación Final Completada:</strong> {{ pageState.selectedDetail.statistics.competition.finalStagePlayed ? 'Sí' : 'No' }}</p>
               <p><strong>Turnos de Combate Ejecutados:</strong> {{ pageState.selectedDetail.statistics.competition.finalStageNormalTurnsPlayed || 0 }}</p>
