@@ -1,4 +1,7 @@
+import { FinalJourneyTeamApi } from './final-contract.model';
+
 export type JourneySpendingStrategy = 'SAVE' | 'BALANCED' | 'AGGRESSIVE';
+export type StageCodeStrategy = 'ROUND_OF_16' | 'QUARTERFINAL' | 'SEMIFINAL';
 export interface JourneySummaryApi {
   id: string;
   teamId: string;
@@ -54,6 +57,54 @@ export interface JourneyHistoryItemApi {
   opponentFinalistId: string;
   opponentFinalistName: string;
   completedAt: string;
+}
+
+//AGREGADO R13
+interface HistoryEventsApi {
+  sequence: number;
+  eventCode: string;
+  stageCode: StageCodeStrategy;
+  encounterId: string;
+}
+
+export interface HistoryTeamsApi extends Omit<FinalJourneyTeamApi, 'heroes'> {
+  generationModeCode: "PLAYER" | "AFFINITY" | "VARIETY" | "FRICTION";
+  heroes?: Array<{
+    heroId: string;
+    currentEnergy: number;
+    currentAbilityPoints: number;
+    status: string;
+    knockedOut: boolean;
+    statGains: [
+      {
+        statCode: string;
+        amount: number;
+      }
+    ];
+  }>;
+  rewardPoints: number;
+  eliminated: boolean;
+}
+export interface JourneyHistoryTeamsApi {
+    attemptId: string;
+    teams: HistoryTeamsApi[];
+    finalists: { playerTeamId: string; opponentTeamId: string };
+}
+export interface JourneyHistoryEventsApi {
+  attemptId: string;
+  language: 'en' | 'es';
+  events: HistoryEventsApi[];
+}
+
+export interface JourneyHistoryStatisticsApi {
+  attempId: string;
+  status: string;
+  completionOutcome: "VICTORY" | "DEFEAT" | "ABANDON";
+  competition:{
+    journeyEncounters: number;
+    finalStagePlayed: boolean;
+    finalStageNormalTurnsPlayed: number;
+  }
 }
 
 //AGREGADO POR LEO
