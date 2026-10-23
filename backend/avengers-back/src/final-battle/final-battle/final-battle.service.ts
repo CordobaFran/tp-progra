@@ -66,11 +66,7 @@ export class FinalBattleService {
         actions: actions?.actions ?? [],
         events: this.orderEvents(events.events),
         inventory: this.composeInventory(resources),
-        strategies: {
-          language: resources.strategies[0]?.language,
-          strategies: resources.strategies.strategies,
-          compatibility: resources.strategies.compatibility,
-        },
+        strategies: resources.strategies,
       };
     } catch (error: unknown) {
       ErrorUtils.mapGameApiError(
@@ -186,7 +182,7 @@ export class FinalBattleService {
     });
     return {
       ...team,
-      heroProfiles: heroProfiles as unknown as FinalBattleTeamModel['heroProfiles'],
+      heroProfiles,
     };
   }
 }

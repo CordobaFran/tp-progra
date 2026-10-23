@@ -1,3 +1,4 @@
+import { HeroApi } from 'src/basic/model/game-api/hero-catalog.model';
 import {
   FinalHeroApi,
   FinalJourneyTeamApi,
@@ -14,7 +15,7 @@ import {
 import { InventoryEntryApi, PowerUpApi } from './final-battle-resources.model';
 
 export interface FinalBattleTeamModel extends FinalJourneyTeamApi {
-  heroProfiles: FinalHeroApi[];
+  heroProfiles: HeroApi[];
 }
 
 export interface FinalBattleInventoryModel extends InventoryEntryApi {

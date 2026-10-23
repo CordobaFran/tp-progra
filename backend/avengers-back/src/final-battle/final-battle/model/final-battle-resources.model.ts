@@ -38,7 +38,7 @@ export interface FinalBattleResources {
   teamId: string;
   language: string;
   currentTeams: FinalJourneyTeamsApi | null;
-  heroes: FinalHeroApi[];
+  heroes: HeroApi[];
   inventory: InventoryApi | null;
   powerUps: PowerUpApi[];
   strategies: FinalStrategyApi[];
