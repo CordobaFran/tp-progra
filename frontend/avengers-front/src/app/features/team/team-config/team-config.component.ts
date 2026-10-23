@@ -205,4 +205,10 @@ export class TeamConfigComponent implements OnInit {
     const miembros = [leaderId, ...companions];
     this.heroes = this.catalogoHeroes.filter((h: HeroItem) => miembros.includes(h.id));
   }
+  cambiarEstrategia(nuevaEstrategia: string): void {
+  if (!this.configuracion?.configuration) {
+    return;
+  }
+  this.configuracion.configuration.strategy = nuevaEstrategia;
+}
 }
