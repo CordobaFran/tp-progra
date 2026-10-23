@@ -100,12 +100,27 @@
           </div>
         </div>
       </div>
+      
     </section>
   </div>
-
-  <!-- Botón para guardar cambios -->
+  
+  <!-- Botón y Selector de Estrategia -->
     <footer class="config-actions">
-      <button type="button" class="btn-save" (click)="guardarConfiguracion()"> <!-- "guardarConfiguracion" para enlazar con el método de TypeScript -->
+      <div class="strategy-selector-container" *ngIf="configuracion?.configuration">
+        <label for="combat-strategy" class="strategy-label">ESTRATEGIA DE COMBATE:</label>
+        <select 
+          id="combat-strategy" 
+          class="strategy-select" 
+          [value]="configuracion?.configuration?.strategy" 
+          (change)="cambiarEstrategia($any($event.target).value)">
+          <option value="BALANCED">BALANCED (Equilibrada)</option>
+          <option value="AGGRESSIVE">AGGRESSIVE (Ofensiva)</option>
+          <option value="DEFENSIVE">DEFENSIVE (Defensiva)</option>
+          <option value="PRAGMATIC">PRAGMATIC (Pragmática)</option>
+        </select>
+      </div>
+
+      <button type="button" class="btn-save" (click)="guardarConfiguracion()">
         GUARDAR CONFIGURACIÓN
       </button>
     </footer>
