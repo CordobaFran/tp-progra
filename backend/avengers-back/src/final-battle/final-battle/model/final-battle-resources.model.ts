@@ -1,4 +1,5 @@
 import {
+  FinalHeroApi,
   FinalJourneyTeamsApi,
   FinalStrategyApi,
 } from '../../../basic/model/game-api/final-contract.model';
@@ -37,7 +38,7 @@ export interface FinalBattleResources {
   teamId: string;
   language: string;
   currentTeams: FinalJourneyTeamsApi | null;
-  heroes: HeroApi[];
+  heroes: FinalHeroApi[];
   inventory: InventoryApi | null;
   powerUps: PowerUpApi[];
   strategies: FinalStrategyApi[];
