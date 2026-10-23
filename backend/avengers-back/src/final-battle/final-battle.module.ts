@@ -8,6 +8,7 @@ import { LiveEventsController } from './live-events/live-events.controller';
 import { LiveEventsService } from './live-events/live-events.service';
 import { TeamStatusController } from './team-status/team-status.controller';
 import { TeamStatusService } from './team-status/team-status.service';
+import { FinalBattleResourcesService } from './final-battle/final-battle-resources.service';
 
 @Module({
   controllers: [
@@ -17,6 +18,7 @@ import { TeamStatusService } from './team-status/team-status.service';
     TeamStatusController,
   ],
   providers: [
+    FinalBattleResourcesService,
     FinalPreparationService,
     FinalBattleService,
     LiveEventsService,
