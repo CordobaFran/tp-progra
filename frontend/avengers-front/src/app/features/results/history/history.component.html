@@ -71,12 +71,12 @@
 
         <div class="multiverse-history-dashboard">
           <!-- Resumen General -->
-          <article class="dashboard-metric-card" *ngIf="pageState.selectedDetail && pageState.selectedDetail.summary">
+          <article class="dashboard-metric-card" *ngIf="pageState.selectedDetail?.summary as summary">
             <h5>Métricas Base del Ciclo</h5>
             <div class="card-interior-content">
-              <p><strong>Estrategia de Gastos:</strong> {{ pageState.selectedDetail.summary.spendingStrategyCode }}</p>
-              <p><strong>Código de Cierre:</strong> {{ pageState.selectedDetail.summary.completionOutcome || 'N/A' }}</p>
-              <p><strong>Estado del Lifecycle:</strong> {{ pageState.selectedDetail.summary.status }}</p>
+              <p><strong>Estrategia de Gastos:</strong> {{ summary.spendingStrategyCode }}</p>
+              <p><strong>Código de Cierre:</strong> {{ summary.completionOutcome || 'N/A' }}</p>
+              <p><strong>Estado del Lifecycle:</strong> {{ summary.status }}</p>
             </div>
           </article>
 
@@ -114,10 +114,10 @@
           <!-- Estado Estadístico Global -->
           <article class="dashboard-metric-card">
             <h5>Auditoría de Incursiones</h5>
-            <div class="card-interior-content" *ngIf="pageState.selectedDetail && pageState.selectedDetail.statistics">
-              <p><strong>Encuentros Totales Jugados:</strong> {{ pageState.selectedDetail.statistics.competition.journeyEncounters || 0 }}</p>
-              <p><strong>Simulación Final Completada:</strong> {{ pageState.selectedDetail.statistics.competition.finalStagePlayed ? 'Sí' : 'No' }}</p>
-              <p><strong>Turnos de Combate Ejecutados:</strong> {{ pageState.selectedDetail.statistics.competition.finalStageNormalTurnsPlayed || 0 }}</p>
+            <div class="card-interior-content" *ngIf="pageState.selectedDetail?.statistics as statistics">
+              <p><strong>Encuentros Totales Jugados:</strong> {{ statistics.competition.journeyEncounters || 0 }}</p>
+              <p><strong>Simulación Final Completada:</strong> {{ statistics.competition.finalStagePlayed ? 'Sí' : 'No' }}</p>
+              <p><strong>Turnos de Combate Ejecutados:</strong> {{ statistics.competition.finalStageNormalTurnsPlayed || 0 }}</p>
             </div>
           </article>
         </div>
