@@ -9,13 +9,25 @@ import { HistoryViewModel } from './model/history-view-model.interface';
   standalone: false,
 })
 export class HistoryComponent implements OnInit {
-  constructor(private readonly historyService: HistoryService) {}
+  constructor(private readonly historyService: HistoryService) { }
 
   get pageState(): HistoryViewModel {
     return this.historyService.getViewModel();
   }
 
   ngOnInit(): void {
+    this.historyService.initialize();
+  }
+
+  public onSelectAttempt(attemptId: string): void {
+    this.historyService.loadHistoryDetail(attemptId);
+  }
+
+  public onBack(): void {
+    this.historyService.resetToListView();
+  }
+
+  public retry(): void {
     this.historyService.initialize();
   }
 }
