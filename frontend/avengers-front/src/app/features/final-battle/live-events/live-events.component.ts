@@ -27,6 +27,10 @@ export class LiveEventsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.liveEvents.initialize();
+  }
+
+  playIntro(): void {
+    this.introAudio.currentTime = 0;
     this.introAudio.play().catch(() => undefined);
   }
 

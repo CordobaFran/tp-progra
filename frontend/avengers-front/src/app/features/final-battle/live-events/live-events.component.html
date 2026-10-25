@@ -7,6 +7,9 @@
       <span class="caption-box">{{ translate('r10.caption') }}</span>
       <h1 class="page-title">{{ translate('r10.title') }}</h1>
       <p class="page-subtitle">{{ translate('r10.subtitle') }}</p>
+      <button type="button" class="button" (click)="playIntro()">
+        {{ pageState.lang === 'es' ? 'Escuchar intro' : 'Play intro' }}
+      </button>
     </div>
     <button
       type="button"
