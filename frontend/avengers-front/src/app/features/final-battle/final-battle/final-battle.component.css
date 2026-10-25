@@ -1,7 +1,372 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.student-feature-shell {
-  min-height: 100%;
+.battle-page {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px 20px 14px;
+  overflow: hidden;
+}
+
+.r9-header {
+  flex: 0 0 auto;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #1a2c3a;
+}
+
+.r9-title-row .page-title {
+  margin: 0;
+}
+
+.page-subtitle {
+  margin: 4px 0 0;
+}
+
+.battle-workspace {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.retry-button {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin-top: 7px;
+  padding: 5px 9px;
+  font-size: calc(10px * var(--ui-font-scale));
+}
+
+.functional-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  padding: 8px 10px;
+  overflow: hidden;
+}
+
+.panel-heading-row {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 6px;
+}
+
+.battle-ready-panel {
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.ready-description {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #c0c6ce;
+}
+
+.button.start {
+  padding: 8px 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Layout de 3 Columnas */
+.battle-columns {
+  display: grid;
+  grid-template-columns: 36% 32% 32%;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Columna 1: Equipo del Jugador */
+.team-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.team-header {
+  flex: 0 0 auto;
+}
+
+.formation {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.formation-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #8c9ba5;
+  text-transform: uppercase;
+}
+
+.hero-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Hero Cards */
+.hero-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background-color: #121c24;
+  border: 1px solid #1f3344;
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.hero-card:hover {
+  background-color: #182631;
+  border-color: #2e4d66;
+}
+
+.hero-card.selected {
+  border-color: #e23636;
+  background-color: #1e262e;
+}
+
+.hero-card.legal-target {
+  border-color: #f1c40f;
+  box-shadow: 0 0 6px rgba(241, 196, 15, 0.4);
+}
+
+.hero-card.knocked-out {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.portrait-cell {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #0b1217;
+  border: 1px solid #23394a;
+}
+
+.portrait-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.hero-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-role {
+  font-size: 0.7rem;
+  color: #8c9ba5;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: #c0c6ce;
+}
+
+.badge-ko {
+  padding: 2px 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background-color: #e23636;
+  color: #ffffff;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+/* Panel de Controles / Acciones */
+.player-controls {
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.action-panel,
+.inventory {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.panel-prompt {
+  margin: 4px 0;
+  font-size: 0.8rem;
+  color: #8c9ba5;
+  font-style: italic;
+}
+
+.action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.action-choice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background-color: #121c24;
+  border: 1px solid #23394a;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.action-choice:hover {
+  background-color: #1a2936;
+  border-color: #3b5f7d;
+}
+
+.action-choice.selected {
+  border-color: #e23636;
+  background-color: #242226;
+}
+
+.action-cost {
+  font-size: 0.72rem;
+  color: #e2a03f;
+}
+
+.target-choice {
+  margin-top: 4px;
+}
+
+.action-footer {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid #1a2c3a;
+}
+
+.action-footer .button {
+  flex: 1 1 0;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.filter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  background-color: #121c24;
+  border: 1px solid #23394a;
+  border-radius: 3px;
+  color: #c0c6ce;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.filter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  background-color: #0b141b;
+  border: 1px solid #1c2e3d;
+  border-radius: 2px;
+  color: #9cb1c2;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.filter-button:hover {
+  background-color: #12202b;
+  border-color: #2b455b;
+  color: #ffffff;
+}
+
+.filter-button.active {
+  background-color: #161a22;
+  border-color: #e23636;
+  color: #ffffff;
+  box-shadow: 0 0 4px rgba(226, 54, 54, 0.4);
+}
+
+.team-column.player-team {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.formation {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 0 auto;
 }

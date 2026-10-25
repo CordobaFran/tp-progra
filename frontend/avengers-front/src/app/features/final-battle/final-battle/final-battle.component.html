@@ -1,3 +1,253 @@
-<main class="student-feature-shell">
-  <app-feature-pending></app-feature-pending>
+<main class="battle-page">
+  <header class="r9-header">
+    <span class="caption-box">{{ translate('r9.caption') }}</span>
+    <div class="r9-title-row">
+      <h1 class="page-title">{{ translate('r9.title') }}</h1>
+      <p class="page-subtitle">{{ translate('r9.subtitle') }}</p>
+    </div>
+  </header>
+
+  <div class="battle-workspace">
+    <app-loading-state *ngIf="vm.submitting" [message]="translate('loading')"></app-loading-state>
+
+    <ng-container *ngIf="status === 'ERROR'">
+      <app-error-state
+        [message]="vm.error ?? translate('error')"
+        [messageCode]="vm.errorCode ?? null"
+      ></app-error-state>
+
+      <button type="button" class="button button-secondary retry-button" (click)="onRefresh()">
+        {{ translate('retry') }}
+      </button>
+    </ng-container>
+
+    <app-empty-state
+      *ngIf="status === 'EMPTY'"
+      [message]="translate('r9.noBattleCopy')"
+    ></app-empty-state>
+
+    <section
+      *ngIf="status === 'READY'"
+      class="functional-panel battle-ready-panel"
+      aria-labelledby="arena-heading"
+    >
+      <div class="panel-heading-row">
+        <h2 class="panel-title">{{ translate('r9.arena') }}</h2>
+      </div>
+
+      <p class="ready-description">{{ translate('r9.chooseAction') }}</p>
+
+      <button
+        type="button"
+        class="button button-primary start"
+        [disabled]="vm.submitting"
+        (click)="onStart()"
+      >
+        {{ vm.submitting ? translate('r9.starting') : translate('r9.start') }}
+      </button>
+    </section>
+    <!-- GRILLA PRINCIPAL DE COMBATE (ACTIVE / COMPLETED) -->
+    <div class="battle-columns" *ngIf="status === 'ACTIVE' || status === 'COMPLETED'">
+      <!-- COLUMNA 1: EQUIPO DEL JUGADOR (36%) -->
+      <section
+        class="team-column player-team"
+        aria-labelledby="player-team-heading"
+        *ngIf="vm.data?.teams?.player as playerSide"
+      >
+        <header class="team-header">
+          <h2 class="panel-title" id="player-team-heading">
+            {{ translate('r9.playerTeam') }}
+          </h2>
+        </header>
+
+        <!-- FORMACIÓN: Héroes en combate -->
+        <div class="formation in-combat">
+          <span class="formation-label">{{ translate('r9.inCombat') }}</span>
+          <div class="hero-list">
+            <article
+              *ngFor="let hero of playerSide.activeHeroes; trackBy: trackByHeroId"
+              class="hero-card"
+              [class.selected]="vm.selectedHeroId === hero.id"
+              [class.knocked-out]="hero.isKnockedOut"
+              [class.legal-target]="isLegalTarget(hero.id)"
+              [attr.aria-selected]="vm.selectedHeroId === hero.id"
+              [attr.aria-disabled]="hero.isKnockedOut"
+              (click)="isLegalTarget(hero.id) ? onSelectHeroTarget(hero.id) : onSelectHero(hero)"
+            >
+              <div class="portrait-cell">
+                <img
+                  [src]="portraitPath(hero.id)"
+                  [alt]="hero.displayName"
+                  (error)="imageError($event)"
+                  loading="lazy"
+                />
+              </div>
+
+              <div class="hero-info">
+                <span class="hero-name">{{ hero.displayName }}</span>
+                <span *ngIf="hero.role" class="hero-role">{{ hero.role }}</span>
+                <div class="hero-stats">
+                  <span class="stat-energy"
+                    >EN: {{ hero.energy ?? 0 }}/{{ hero.maxEnergy ?? 0 }}</span
+                  >
+                  <span class="stat-ap">AP: {{ hero.ap ?? 0 }}/{{ hero.maxAp ?? 0 }}</span>
+                </div>
+              </div>
+
+              <span *ngIf="hero.isKnockedOut" class="badge-ko">
+                {{ translate('r9.event.ko') }}
+              </span>
+            </article>
+          </div>
+        </div>
+
+        <!-- FORMACIÓN: Reserva (si existen héroes en banca) -->
+        <div class="formation reserve" *ngIf="playerSide.reserveHeroes.length > 0">
+          <span class="formation-label">{{ translate('r9.reserve') }}</span>
+          <div class="hero-list">
+            <article
+              *ngFor="let hero of playerSide.reserveHeroes; trackBy: trackByHeroId"
+              class="hero-card reserve-card"
+              [class.knocked-out]="hero.isKnockedOut"
+            >
+              <div class="portrait-cell">
+                <img
+                  [src]="portraitPath(hero.id)"
+                  [alt]="hero.displayName"
+                  (error)="imageError($event)"
+                  loading="lazy"
+                />
+              </div>
+
+              <div class="hero-info">
+                <span class="hero-name">{{ hero.displayName }}</span>
+                <span *ngIf="hero.role" class="hero-role">{{ hero.role }}</span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <!-- PANEL DE CONTROL DEL JUGADOR: Habilidades / Inventario -->
+        <section class="functional-panel player-controls" aria-labelledby="controls-heading">
+          <div class="panel-heading-row">
+            <h3 class="panel-title" id="controls-heading">
+              {{ translate('r9.legalActions') }}
+            </h3>
+          </div>
+
+          <!-- Pestañas de selección (Habilidades / Inventario) -->
+          <div class="tabs" role="tablist">
+            <button
+              type="button"
+              class="filter-button"
+              role="tab"
+              [class.active]="isAbilitiesTab"
+              [attr.aria-selected]="isAbilitiesTab"
+              (click)="onSelectTab('abilities')"
+            >
+              {{ translate('r9.abilities') }}
+            </button>
+            <button
+              type="button"
+              class="filter-button"
+              role="tab"
+              [class.active]="isInventoryTab"
+              [attr.aria-selected]="isInventoryTab"
+              (click)="onSelectTab('inventory')"
+            >
+              {{ translate('r9.vault') }}
+            </button>
+          </div>
+
+          <!-- Pestaña 1: Habilidades de Héroe -->
+          <div class="action-panel" *ngIf="isAbilitiesTab">
+            <p *ngIf="!vm.selectedHeroId" class="panel-prompt">
+              {{ translate('r9.selectHeroPrompt') }}
+            </p>
+
+            <div
+              *ngIf="vm.selectedHeroId && availableActionCodes.length === 0"
+              class="panel-prompt"
+            >
+              {{ translate('r9.noActions') }}
+            </div>
+
+            <div class="action-list" *ngIf="vm.selectedHeroId && availableActionCodes.length > 0">
+              <button
+                *ngFor="let code of availableActionCodes; trackBy: trackByActionCode"
+                type="button"
+                class="action-choice"
+                [class.selected]="vm.actionCode === code"
+                (click)="onSelectActionCode(code)"
+              >
+                <span class="action-label">
+                  {{ getActionDescriptor(code)?.label || code }}
+                </span>
+                <span *ngIf="getActionDescriptor(code)?.apCost" class="action-cost">
+                  {{ translate('r9.cost') }}: {{ getActionDescriptor(code)?.apCost }}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Pestaña 2: Inventario -->
+          <div class="inventory" *ngIf="isInventoryTab">
+            <div *ngIf="availableActionCodes.length === 0" class="panel-prompt">
+              {{ translate('r9.noInventory') }}
+            </div>
+
+            <div class="action-list" *ngIf="availableActionCodes.length > 0">
+              <button
+                *ngFor="let code of availableActionCodes; trackBy: trackByActionCode"
+                type="button"
+                class="action-choice"
+                [class.selected]="vm.actionCode === code"
+                (click)="onSelectActionCode(code)"
+              >
+                <span class="action-label">
+                  {{ getActionDescriptor(code)?.label || code }}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Opción de objetivo a equipo completo -->
+          <div class="target-choice" *ngIf="hasTeamTargetOption">
+            <button type="button" class="button button-secondary" (click)="onSelectTeamTarget()">
+              {{ translate('r9.target') }}: {{ translate('r9.playerTeam') }}
+            </button>
+          </div>
+
+          <!-- Botonera de Ejecución / Abandono -->
+          <div class="action-footer">
+            <button
+              type="button"
+              class="button button-primary execute"
+              [disabled]="!canExecute() || vm.submitting"
+              (click)="onExecute()"
+            >
+              {{
+                vm.submitting
+                  ? translate('r9.executing')
+                  : isInventoryTab
+                    ? translate('r9.useItem')
+                    : translate('r9.executeAction')
+              }}
+            </button>
+
+            <button
+              type="button"
+              class="button button-secondary abandon"
+              [disabled]="vm.submitting || status === 'COMPLETED'"
+              (click)="onAbandon()"
+            >
+              {{ translate('r9.abandon') }}
+            </button>
+          </div>
+        </section>
+      </section>
+
+      <!-- Espacio reservado para Columna 2 (Rival) y Columna 3 (Narrativa) -->
+    </div>
+  </div>
 </main>
