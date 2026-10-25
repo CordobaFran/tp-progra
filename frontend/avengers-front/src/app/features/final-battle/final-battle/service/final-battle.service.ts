@@ -6,9 +6,15 @@ import { BaseApiService } from '../../../../core/services/base-api.service';
 import {
   BattleStatus,
   FinalBattleCommand,
+  FinalBattleHero,
   FinalBattleLegalAction,
   FinalBattleModel,
+  FinalBattleSide,
   FinalBattleViewModel,
+  HeroeDelBackend,
+  EquipoDelBackend,
+  AccionDelBackend,
+  RespuestaBatallaBackend,
 } from '../model/final-battle.model';
 
 // Contrato para el panel de narrativa -> Ema 
@@ -191,20 +197,17 @@ export class FinalBattleService extends BaseApiService { // hereda de
     this.pageState.error = null; 
     this.pageState.errorCode = null;
 
-    this.getData<FinalBattleModel>('/final-stage').subscribe({
-      next: (data) => { 
-        this.pageState.data = data; // si está todo bien, lo guarda en 'data'
-        this.pageState.status = this.resolveBattleStatus(data);
-        this.resetSelections(); // limpia selecciones cambiadas por el usuario
-      },
-      // next y error, propios de RxJS, asi como 'catch' y 'try'
-      error: (error: unknown) => {
-        const apiError: ApiError = toApiError(error);
-        this.pageState.status = 'ERROR'; // si falla, cambia el estado 'pageState' -> error
-        this.pageState.error = apiError.message;
-        this.pageState.errorCode = apiError.messageCode;
-      },
-    });
+    this.getData<RespuestaBatallaBackend>('/final-stage').subscribe({
+  next: (respuesta) => { 
+    this.updateModel(respuesta);
+  },
+  error: (error: unknown) => {
+    const apiError: ApiError = toApiError(error);
+    this.pageState.status = 'ERROR';
+    this.pageState.error = apiError.message;
+    this.pageState.errorCode = apiError.messageCode;
+  },
+  });
   }
 
   // envia comandos al BFF -> backend NestSJ mediante POST '/final-stage/play'
@@ -217,20 +220,17 @@ export class FinalBattleService extends BaseApiService { // hereda de
     this.pageState.operationError = null;
     this.pageState.operationErrorCode = null;
 
-    this.postData<FinalBattleModel>('/final-stage/play', command).subscribe({
-      next: (updatedBattle) => {
-        this.pageState.submitting = false;
-        this.pageState.data = updatedBattle;
-        this.pageState.status = this.resolveBattleStatus(updatedBattle);
-        this.resetSelections(); // resetea Selecciones anteriores
-      },
-      error: (error: unknown) => {
-        this.pageState.submitting = false;
-        const apiError: ApiError = toApiError(error);
-        // Si fallo la recarga posterior a la operacion segun el contrato del BFF
-        this.pageState.operationError = apiError.message;
-        this.pageState.operationErrorCode =
-          apiError.messageCode ?? 'BFF_FINAL_STAGE_REFRESH_FAILED'; // guardar código aqui
+    this.postData<RespuestaBatallaBackend>('/final-stage/play', command).subscribe({
+    next: (respuestaActualizada) => {
+      this.pageState.submitting = false;
+      this.updateModel(respuestaActualizada);
+    },
+    error: (error: unknown) => {
+      this.pageState.submitting = false;
+      const apiError: ApiError = toApiError(error);
+      this.pageState.operationError = apiError.message;
+      this.pageState.operationErrorCode =
+        apiError.messageCode ?? 'BFF_FINAL_STAGE_REFRESH_FAILED';
       },
     });
   }
@@ -271,5 +271,76 @@ export class FinalBattleService extends BaseApiService { // hereda de
     this.pageState.selectedActionId = null;
     this.pageState.selectedGroup = null;
     this.pageState.actionCode = null;
+  }
+
+  // adapta la respuesta cruda del BFF al formato estructurado que consume el HTML
+  private updateModel(respuesta: RespuestaBatallaBackend | null): void {
+    if (!respuesta) {
+      return;
+    }
+
+    //---- TRANSFORMACION DE DATOS DEL BACKEND A LA VISTA ----//
+    // 1 convierte cada personaje uno por uno para que use las propiedades que necesita nuestra vista
+    const convertirHeroe = (h: HeroeDelBackend): FinalBattleHero => ({
+      id: h.id ?? h.heroId ?? '',
+      displayName: h.displayName ?? h.name ?? h.heroId ?? '',
+      role: h.role,
+      energy: h.energy ?? h.currentEnergy ?? 0,
+      maxEnergy: h.maxEnergy ?? h.maximumEnergy ?? 100,
+      ap: h.ap ?? h.currentAbilityPoints ?? 0,
+      maxAp: h.maxAp ?? h.maximumAbilityPoints ?? 10,
+      isKnockedOut: Boolean(
+        h.isKnockedOut || h.condition === 'KNOCKED_OUT' || h.condition === 'DEFEATED'
+      ),
+    });
+
+    // 2 Separación de equipos --> Separa los heroes en titulares (activos) y suplentes (banco
+    const armarEquipo = (equipo?: EquipoDelBackend): FinalBattleSide => {
+      const listaHeroes = equipo?.heroes ?? [];
+
+      return {
+        teamId: equipo?.teamId ?? '',
+        activeHeroes: listaHeroes
+          .filter((h) => h.status === 'ACTIVE')
+          .map(convertirHeroe),
+        reserveHeroes: listaHeroes
+          .filter((h) => h.status === 'INACTIVE')
+          .map(convertirHeroe),
+      };
+    };
+
+    // 3 extrae el costo de energia y el rival seleccionado para usarlos directo en los botones
+    const accionesMapeadas: FinalBattleLegalAction[] | undefined = respuesta.actions?.map((acc: AccionDelBackend) => ({
+      actionId: acc.actionId,
+      actionCode: acc.actionCode,
+      category: acc.category,
+      actorHeroId: acc.actorHeroId,
+      label: acc.label,
+      description: acc.description,
+      apCost: acc.cost?.abilityPoints,
+      targetHeroId: acc.target?.targetId,
+      targetScope: acc.target?.targetType,
+    }));
+
+    // 4 arma el modelo final uniendo los heroes, las acciones y la historia del combate
+    const batallaMapeada: FinalBattleModel = {
+      state: respuesta.state ?? null,
+      teams: respuesta.teams
+        ? {
+            player: armarEquipo(respuesta.teams.player),
+            opponent: armarEquipo(respuesta.teams.opponent),
+          }
+        : undefined,
+      actions: accionesMapeadas,
+      events: respuesta.events ?? [],
+      inventory: respuesta.inventory ?? [],
+      strategies: respuesta.strategies ?? [],
+      receipt: respuesta.receipt,
+    };
+
+    // 5 actualiza la pantalla con la nueva información y resetea los clics anteriores
+    this.pageState.data = batallaMapeada;
+    this.pageState.status = this.resolveBattleStatus(batallaMapeada);
+    this.resetSelections();
   }
 }

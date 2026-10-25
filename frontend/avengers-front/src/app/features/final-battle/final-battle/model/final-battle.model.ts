@@ -67,7 +67,7 @@ export interface FinalBattleModel {
 }
 
 // estado global de pantalla consumido por Leo en el Componente y HTML
-// servicio que proveerá a Leo para que utilice en su HTML para dibujar cada componente
+// servicio que proveera a Leo para que utilice en su HTML para dibujar cada componente
 export interface FinalBattleViewModel {
   status: BattleStatus;
   error: string | null;
@@ -82,4 +82,61 @@ export interface FinalBattleViewModel {
   selectedActionId: string | null;
   tab: 'abilities' | 'inventory'; // si se están enviando las habilidades del heroe u objetos del inventario
   actionCode: string | null;
+}
+
+// interfaz para saber como viene el 'héroe' crudo desde el backend
+export interface HeroeDelBackend {
+  heroId?: string;
+  id?: string;
+  displayName?: string;
+  name?: string;
+  role?: string;
+  currentEnergy?: number;
+  energy?: number;
+  maximumEnergy?: number;
+  maxEnergy?: number;
+  currentAbilityPoints?: number;
+  maximumAbilityPoints?: number;
+  ap?: number;
+  maxAp?: number;
+  status?: string;
+  condition?: string;
+  isKnockedOut?: boolean;
+}
+
+// interfaz para saber como vienen las acciones crudas del backend
+export interface AccionDelBackend {
+  actionId: string;
+  actionCode: string;
+  category?: ActionCategory;
+  actorHeroId?: string;
+  label?: string;
+  description?: string;
+  cost?: {
+    abilityPoints?: number;
+  };
+  target?: {
+    targetId?: string;
+    targetType?: 'HERO' | 'TEAM';
+  };
+}
+
+// interfaz para saber como viene el 'equipo' desde el backend
+export interface EquipoDelBackend {
+  teamId?: string;
+  heroes?: HeroeDelBackend[];
+}
+
+// interfaz para la respuesta general cruda del backend
+export interface RespuestaBatallaBackend {
+  state?: FinalBattleModel['state'];
+  teams?: {
+    player?: EquipoDelBackend;
+    opponent?: EquipoDelBackend;
+  };
+  actions?: AccionDelBackend[];
+  events?: unknown[];
+  inventory?: unknown[];
+  strategies?: unknown[];
+  receipt?: unknown;
 }
