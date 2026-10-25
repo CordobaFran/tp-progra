@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AppCopyKey, I18nService } from '../../../core/services/i18n.service';
 import {
   FinalStageEventValues,
@@ -13,7 +13,9 @@ import { LiveEventsService } from './service/live-events.service';
   styleUrls: ['./live-events.component.css'],
   standalone: false,
 })
-export class LiveEventsComponent implements OnInit {
+export class LiveEventsComponent implements OnInit, OnDestroy {
+  private readonly introAudio = new Audio('assets/audio/live-events-intro.mp3');
+
   constructor(
     private readonly liveEvents: LiveEventsService,
     private readonly i18n: I18nService,
@@ -25,6 +27,12 @@ export class LiveEventsComponent implements OnInit {
 
   ngOnInit(): void {
     this.liveEvents.initialize();
+    this.introAudio.play().catch(() => undefined);
+  }
+
+  ngOnDestroy(): void {
+    this.introAudio.pause();
+    this.introAudio.currentTime = 0;
   }
 
   refresh(): void {
