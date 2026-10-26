@@ -1,10 +1,8 @@
 :host {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  max-height: 100%;
   min-height: 0;
-  overflow: hidden;
+  width: 100%;
 }
 
 .battle-page {
@@ -12,11 +10,10 @@
   flex-direction: column;
   gap: 8px;
   width: 100%;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
+  min-height: 100vh;
   padding: 12px 20px 14px;
-  overflow: hidden;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .r9-header {
@@ -57,7 +54,6 @@
   min-height: 0;
   min-width: 0;
   padding: 8px 10px;
-  overflow: hidden;
 }
 
 .panel-heading-row {
@@ -91,30 +87,52 @@
 /* Layout de 3 Columnas */
 .battle-columns {
   display: grid;
-  grid-template-columns: 36% 32% 32%;
+  grid-template-columns: minmax(440px, 1.2fr) minmax(360px, 1fr) minmax(280px, 0.9fr);
   gap: 12px;
   flex: 1 1 auto;
   min-height: 0;
-  overflow: hidden;
+  margin-top: 10px;
 }
 
-/* Columna 1: Equipo del Jugador */
+/* Columnas de Equipos */
 .team-column {
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-height: 0;
   overflow-y: auto;
+  padding-right: 4px;
+}
+
+.team-column.player-team,
+.team-column.opponent-team {
+  background: rgba(10, 20, 36, 0.75);
+  border: 1px solid #1a3a60;
+  border-radius: 4px;
+  padding: 12px;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
 }
 
 .team-header {
   flex: 0 0 auto;
 }
 
+.formations-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 1000px) {
+  .formations-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .formation {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex: 0 0 auto;
 }
 
@@ -129,37 +147,56 @@
 .hero-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
-/* Hero Cards */
+/* Tarjetas de Héroes (Base única sin duplicados) */
 .hero-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  background-color: #121c24;
-  border: 1px solid #1f3344;
-  border-radius: 4px;
+  gap: 12px;
+  padding: 8px 10px;
+  background: rgba(13, 27, 46, 0.6);
+  border: 1px solid #1a3a60;
+  border-radius: 3px;
   cursor: pointer;
+  min-width: 0;
+  box-sizing: border-box;
   transition:
     border-color 0.15s ease,
     background-color 0.15s ease;
 }
 
 .hero-card:hover {
-  background-color: #182631;
+  background: rgba(20, 39, 66, 0.8);
   border-color: #2e4d66;
 }
 
-.hero-card.selected {
-  border-color: #e23636;
-  background-color: #1e262e;
+/* 1. Target legal general (VERDE) */
+.hero-card.legal-target {
+  border: 1px solid #22c55e;
+  box-shadow:
+    inset 0 0 0 1px #22c55e,
+    0 0 8px rgba(34, 197, 94, 0.35);
 }
 
-.hero-card.legal-target {
-  border-color: #f1c40f;
-  box-shadow: 0 0 6px rgba(241, 196, 15, 0.4);
+/* 2. Héroe del JUGADOR seleccionado (AMARILLO) */
+.team-column.player-team .hero-card.selected {
+  border: 1px solid #f5c518;
+  box-shadow:
+    inset 0 0 0 1px #f5c518,
+    0 0 8px rgba(245, 197, 24, 0.4);
+  background-color: rgba(245, 197, 24, 0.08);
+}
+
+/* 3. Héroe del OPONENTE seleccionado como target (VIOLETA - Gana por especificidad) */
+.team-column.opponent-team .hero-card.selected,
+.team-column.opponent-team .hero-card.legal-target.selected {
+  border: 1px solid #a855f7;
+  box-shadow:
+    inset 0 0 0 1px #a855f7,
+    0 0 10px rgba(168, 85, 247, 0.5);
+  background-color: rgba(168, 85, 247, 0.14);
 }
 
 .hero-card.knocked-out {
@@ -169,37 +206,38 @@
 }
 
 .portrait-cell {
-  position: relative;
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
-  border-radius: 4px;
+  width: 54px;
+  height: 70px;
+  flex-shrink: 0;
+  border-radius: 2px;
   overflow: hidden;
-  background-color: #0b1217;
-  border: 1px solid #23394a;
+  border: 1px solid #1a3a60;
+  background-color: #0b1523;
 }
 
 .portrait-cell img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top center;
 }
 
 .hero-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   flex: 1 1 auto;
   min-width: 0;
 }
 
 .hero-name {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-transform: capitalize;
 }
 
 .hero-role {
@@ -209,9 +247,10 @@
 
 .hero-stats {
   display: flex;
-  gap: 8px;
-  font-size: 0.72rem;
-  color: #c0c6ce;
+  flex-direction: column;
+  font-size: 0.7rem;
+  color: #a0aec0;
+  font-family: monospace;
 }
 
 .badge-ko {
@@ -226,6 +265,9 @@
 
 /* Panel de Controles / Acciones */
 .player-controls {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
   gap: 8px;
   margin-top: 4px;
 }
@@ -236,14 +278,44 @@
   flex: 0 0 auto;
 }
 
+.filter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  background-color: #121c24;
+  border: 1px solid #23394a;
+  border-radius: 3px;
+  color: #c0c6ce;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.filter-button:hover {
+  background-color: #12202b;
+  border-color: #2b455b;
+  color: #ffffff;
+}
+
+.filter-button.active {
+  background-color: #161a22;
+  border-color: #e23636;
+  color: #ffffff;
+  box-shadow: 0 0 4px rgba(226, 54, 54, 0.4);
+}
+
 .action-panel,
 .inventory {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
+  flex: 1 0 auto;
 }
 
 .panel-prompt {
@@ -256,7 +328,9 @@
 .action-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
 }
 
 .action-choice {
@@ -307,66 +381,108 @@
   font-weight: 700;
 }
 
-.filter-button {
-  display: inline-flex;
+/* Contenedor de botones al pie */
+.action-footer-buttons {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 6px 14px;
-  background-color: #121c24;
-  border: 1px solid #23394a;
-  border-radius: 3px;
-  color: #c0c6ce;
-  font-family: inherit;
-  font-size: 0.75rem;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Botón Ejecutar Acción */
+.action-footer-buttons .execute-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Verde activo */
+  color: #ffffff;
+  border: 1px solid #34d399;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
   font-weight: 700;
+  text-transform: uppercase;
   letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-footer-buttons .execute-btn:disabled {
+  background: #2a3441;
+  border-color: #3b4754;
+  color: #64748b;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Botón Abandonar */
+.action-footer-buttons .abandon-btn {
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.15s ease;
-  outline: none;
+  transition: all 0.2s ease;
 }
 
-.filter-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  background-color: #0b141b;
-  border: 1px solid #1c2e3d;
-  border-radius: 2px;
-  color: #9cb1c2;
-  font-family: inherit;
+.action-footer-buttons .abandon-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #f87171;
+  color: #fca5a5;
+}
+
+.action-footer-buttons .abandon-btn:disabled {
+  border-color: #475569;
+  color: #475569;
+  cursor: not-allowed;
+}
+
+.strategy-selector {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+.strategy-title {
+  display: block;
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+}
+
+.strategy-chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.strategy-chips .chip-button {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
-  outline: none;
+  transition: all 0.2s ease;
 }
 
-.filter-button:hover {
-  background-color: #12202b;
-  border-color: #2b455b;
+.strategy-chips .chip-button:hover {
+  border-color: #38bdf8;
+  background: #334155;
+}
+
+.strategy-chips .chip-button.selected {
+  background: #0284c7;
+  border-color: #38bdf8;
   color: #ffffff;
-}
-
-.filter-button.active {
-  background-color: #161a22;
-  border-color: #e23636;
-  color: #ffffff;
-  box-shadow: 0 0 4px rgba(226, 54, 54, 0.4);
-}
-
-.team-column.player-team {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  height: 100%;
-  overflow-y: auto;
-}
-
-.formation {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 0 0 auto;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
 }

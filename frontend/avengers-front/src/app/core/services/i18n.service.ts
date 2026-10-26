@@ -362,6 +362,11 @@ export type AppCopyKey =
   | 'r9.event.swapDetail'
   | 'r9.event.specialDetail'
   | 'r9.event.skippedDetail'
+  | 'r9.energy'
+  | 'r9.energyFull'
+  | 'r9.ap'
+  | 'r9.apFull'
+  | 'r9.abandon'
   | 'r10.refresh'
   | 'r10.status'
   | 'r10.ready'
@@ -824,6 +829,11 @@ const DICTIONARY: Record<AppLanguage, Record<AppCopyKey, string>> = {
     'r9.event.specialDetail': 'A special battle event was recorded.',
     'r9.event.skippedDetail': '{actor} could not complete the action.',
     'r9.event.skipped': 'ACTION SKIPPED',
+    'r9.energy': 'EN',
+    'r9.energyFull': 'ENERGY',
+    'r9.ap': 'AP',
+    'r9.apFull': 'ABILITY POINTS',
+    'r9.abandon': 'ABANDON',
     'r10.refresh': 'Refresh',
     'r10.status': 'Status',
     'r10.ready': 'Ready to start',
@@ -1288,6 +1298,11 @@ const DICTIONARY: Record<AppLanguage, Record<AppCopyKey, string>> = {
     'r9.event.specialDetail': 'Se registró un evento especial del combate.',
     'r9.event.skippedDetail': '{actor} no pudo completar la acción.',
     'r9.event.skipped': 'ACCIÓN OMITIDA',
+    'r9.energy': 'EN',
+    'r9.energyFull': 'ENERGÍA',
+    'r9.ap': 'PA',
+    'r9.apFull': 'PUNTOS DE HABILIDAD',
+    'r9.abandon': 'ABANDON',
     'r10.refresh': 'Actualizar',
     'r10.status': 'Estado',
     'r10.ready': 'Lista para iniciar',
