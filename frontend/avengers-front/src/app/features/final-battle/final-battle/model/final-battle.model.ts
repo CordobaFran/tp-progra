@@ -181,3 +181,10 @@ export interface RespuestaBatallaBackend {
   strategies?: unknown[];
   receipt?: unknown;
 }
+
+// Type Alias: en caso que utilicen modelos en ingles
+export type FinalBattleResponse = RespuestaBatallaBackend;
+export type FinalBattleTeamApi = EquipoDelBackend;
+export type FinalBattleHeroApi = HeroeDelBackend;
+export type FinalBattleHeroProfile = HeroProfileBackend;
+export type FinalBattleActionApi = AccionDelBackend;
