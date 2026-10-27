@@ -18,6 +18,7 @@ import {
   HeroProfileBackend,
 } from '../model/final-battle.model';
 import { FinalNarrativeViewModel } from '../narrative/model/final-narrative.model';
+
 export { FinalNarrativeViewModel } from '../narrative/model/final-narrative.model';
 
 @Injectable({ providedIn: 'root' })

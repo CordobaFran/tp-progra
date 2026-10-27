@@ -1,9 +1,7 @@
 import { HeroApi } from 'src/basic/model/game-api/hero-catalog.model';
 import {
-  FinalHeroApi,
   FinalJourneyTeamApi,
   FinalStrategyApi,
-  FinalStrategyCatalogApi,
 } from '../../../basic/model/game-api/final-contract.model';
 import {
   FinalStageStateApi,
