@@ -15,26 +15,16 @@ import {
   EquipoDelBackend,
   AccionDelBackend,
   RespuestaBatallaBackend,
+  HeroProfileBackend,
 } from '../model/final-battle.model';
-
-export interface FinalNarrativeEntry {
-  turn?: number;
-  message?: string;
-  actorHeroId?: string;
-  actionCode?: string;
-}
-
-// Contrato para el panel de narrativa -> Ema 
-export interface FinalNarrativeViewModel {
-  status: BattleStatus;
-  error: string | null;
-  lang: string;
-  state: FinalBattleModel['state'];
-  events: FinalNarrativeEntry[];
-}
+import { FinalNarrativeViewModel } from '../narrative/model/final-narrative.model';
+export { FinalNarrativeViewModel } from '../narrative/model/final-narrative.model';
 
 @Injectable({ providedIn: 'root' })
-export class FinalBattleService extends BaseApiService { // hereda de 
+export class FinalBattleService extends BaseApiService {
+  // Contador para descartar respuestas viejas que lleguen tarde por la red
+  private latestRequestId = 0;
+
   // Estado general de la pantalla consumido por Leo
   private readonly pageState: FinalBattleViewModel = {
     status: 'EMPTY',
@@ -42,7 +32,9 @@ export class FinalBattleService extends BaseApiService { // hereda de
     errorCode: null,
     data: null,
     lang: 'es',
-    submitting: false, // si está  'cargando'...
+    loading: false, // bandera de carga inicial
+    needsRefresh: false, // marca si hubo un error y hay que recargar sí o sí
+    submitting: false, // si se está enviando una jugada
     operationError: null,
     operationErrorCode: null,
     selectedHeroId: null,
@@ -59,56 +51,56 @@ export class FinalBattleService extends BaseApiService { // hereda de
     super(api);
   }
 
-  // Método GET 'pageState' para el HTML -> Leo
+  // Entrega el estado completo de la batalla para que Leo arme el HTML
   getViewModel(): FinalBattleViewModel {
-    return this.pageState; 
+    return this.pageState;
   }
 
-  // entrega la vista para el panel narrativo de Ema
+  // Entrega los datos masticados para el panel narrativo de Ema
   getNarrative(): FinalNarrativeViewModel {
-    const rawEvents = (this.pageState.data?.events ?? []) as Array<{
-      turn?: number;
-      message?: string;
-      actorHeroId?: string;
-      actionCode?: string;
-      narrative?: {
-        lines?: Array<{ text?: string }>;
-      };
-    }>;
-
-    const mappedEvents: FinalNarrativeEntry[] = rawEvents.map((evt) => ({
-      turn: evt.turn,
-      message: evt.message ?? evt.narrative?.lines?.[0]?.text ?? '',
-      actorHeroId: evt.actorHeroId,
-      actionCode: evt.actionCode,
-    }));
-
+    const state = this.pageState;
     return {
-      status: this.pageState.status,
-      error: this.pageState.error,
-      lang: this.pageState.lang,
-      state: this.pageState.data?.state ?? null,
-      events: mappedEvents,
+      status: state.loading
+        ? 'loading'
+        : state.status === 'ERROR'
+        ? 'error'
+        : !state.data?.events?.length
+        ? 'empty'
+        : 'data',
+      error: state.error,
+      errorCode: state.errorCode,
+      lang: state.lang === 'es' ? 'es' : 'en',
+      state: state.data?.state ?? null,
+      events: state.data?.events ?? [],
     };
   }
 
-  // --------------- //
-
-  // Navegación y clicks de usuario
-
-  // Inicializa la pantalla obteniendo el idioma y cargando el estado inicial -> 'pageState'
+  // Inicializa la pantalla cargando idioma y pegándole al endpoint inicial
   initialize(): void {
     this.pageState.lang = this.appContextService.getCurrentLang();
     this.loadBattle();
   }
 
-  // Actualiza la información del combate bajo demanda
+  // Fuerza la recarga manual de la batalla (cuando tocan el botón Actualizar)
   refresh(): void {
     this.loadBattle();
   }
 
-  // selecciona un héroe del equipo activo
+  // El candado central: bloquea clicks si la batalla no está activa, si está cargando o si falló
+  canInteract(): boolean {
+    return (
+      this.pageState.status === 'ACTIVE' &&
+      !this.pageState.loading &&
+      !this.pageState.submitting &&
+      !this.pageState.needsRefresh
+    );
+  }
+
+  // Selecciona un héroe titular del equipo
   selectHero(heroId: string | null): void {
+    if (!this.canInteract()) {
+      return;
+    }
     if (this.pageState.selectedHeroId === heroId) {
       return;
     }
@@ -118,8 +110,11 @@ export class FinalBattleService extends BaseApiService { // hereda de
     this.pageState.actionCode = null;
   }
 
-  // Cambia la pestaña entre habilidades e inventario
+  // Alterna entre la pestaña de habilidades y la de inventario
   setTab(tab: 'abilities' | 'inventory'): void {
+    if (!this.canInteract()) {
+      return;
+    }
     if (this.pageState.tab === tab) {
       return;
     }
@@ -129,16 +124,19 @@ export class FinalBattleService extends BaseApiService { // hereda de
     this.pageState.selectedGroup = null;
   }
 
-  // guarda la habilidad elegida y resetea el objetivo anterior
+  // Guarda el código de la acción elegida (ataque, swap, etc.) y limpia el objetivo anterior
   setActionCode(code: string | null): void {
+    if (!this.canInteract()) {
+      return;
+    }
     this.pageState.actionCode = code;
-    this.pageState.selectedActionId = null; // aqui resetea la habilidad en 'null' 
+    this.pageState.selectedActionId = null;
   }
 
-  // devuelve los grupos o categorias disponibles segun el contexto actual
+  // Devuelve las categorías disponibles según si estamos en inventario o en un héroe
   groups(): string[] {
     const actions = this.getAvailableActionsForCurrentContext();
-    const uniqueGroups = new Set<string>(); // no permite duplicados 
+    const uniqueGroups = new Set<string>();
     for (const action of actions) {
       if (action.category) {
         uniqueGroups.add(action.category);
@@ -147,7 +145,7 @@ export class FinalBattleService extends BaseApiService { // hereda de
     return Array.from(uniqueGroups);
   }
 
-  // devuelve los actionCodes disponibles para la pestaña o héroe activo
+  // Devuelve los códigos de acción disponibles sin repetir
   actionCodes(): string[] {
     const actions = this.getAvailableActionsForCurrentContext();
     const uniqueCodes = new Set<string>();
@@ -159,46 +157,49 @@ export class FinalBattleService extends BaseApiService { // hereda de
     return Array.from(uniqueCodes);
   }
 
-  // selecciona una categoria -> ej: attack, ability, item
+  // Filtra por categoría (ej: attack, ability, item)
   selectGroup(group: string | null): void {
+    if (!this.canInteract()) {
+      return;
+    }
     this.pageState.selectedGroup = group;
-    this.pageState.selectedActionId = null; // la resetea en memoria
+    this.pageState.selectedActionId = null;
   }
 
-  // selecciona la acción concreta por su actionId
+  // Selecciona el objetivo final por su actionId para dejar lista la jugada
   selectTarget(actionId: string): void {
-    this.pageState.selectedActionId = actionId; // no hace falta resetear en este caso, ya que es la ultima etapa al 'Ejecutar'
+    if (
+      !this.canInteract() ||
+      !this.pageState.data?.actions?.some((action) => action.actionId === actionId)
+    ) {
+      return;
+    }
+    this.pageState.selectedActionId = actionId;
   }
 
-  // retorna la acción 'legal' completa seleccionada actualmente
+  // Busca en la lista la acción completa que el usuario tiene seleccionada
   selectedAction(): FinalBattleLegalAction | null {
     if (!this.pageState.selectedActionId || !this.pageState.data?.actions) {
       return null;
     }
     return (
-      this.pageState.data.actions.find( // sirve para buscar un unico elemento dentro de una lista
+      this.pageState.data.actions.find(
         (action) => action.actionId === this.pageState.selectedActionId,
-      ) ?? null // devuelve null, ya que sino el método find() por defecto, retorna 'undefined'
+      ) ?? null
     );
   }
 
-  // determina si el botón 'Ejecutar' del encabezado debe estar habilitado bajo 3 condiciones
+  // Habilita el botón Ejecutar solo si el usuario puede operar y eligió una acción válida
   canExecute(): boolean {
-    return (
-      !this.pageState.submitting && // si no hay petición HTTP ejecutandose
-      this.pageState.status === 'ACTIVE' &&
-      this.selectedAction() !== null
-    );
+    return this.canInteract() && this.selectedAction() !== null;
   }
 
-  // --- 3 comandos del juego ---- //
-
-  // comando 'START' -> inicia la batalla final
+  // Inicia el combate enviando comando START
   start(): void {
     this.sendCommand({ type: 'START' });
   }
 
-  // comando 'CHOOSE_ACTION' -> ejecuta la jugada seleccionada
+  // Manda la jugada elegida al backend con su actionId
   execute(): void {
     const action = this.selectedAction();
     if (!action) {
@@ -210,79 +211,119 @@ export class FinalBattleService extends BaseApiService { // hereda de
     });
   }
 
-  // comando 'ABANDON' -> retirada
+  // Abandona la partida enviando comando ABANDON
   abandon(): void {
     this.sendCommand({ type: 'ABANDON' });
   }
 
-  // consulta el endpoint GET '/final-stage' creado en el backend -> final-battle
+  // Consulta el endpoint GET '/final-stage'
   private loadBattle(): void {
-    this.pageState.status = 'READY';
-    this.pageState.error = null; 
-    this.pageState.errorCode = null;
-
-    this.getData<RespuestaBatallaBackend>('/final-stage').subscribe({
-  next: (respuesta) => { 
-    this.updateModel(respuesta);
-  },
-  error: (error: unknown) => {
-    const apiError: ApiError = toApiError(error);
-    this.pageState.status = 'ERROR';
-    this.pageState.error = apiError.message;
-    this.pageState.errorCode = apiError.messageCode;
-  },
-  });
-  }
-
-  // envia comandos al BFF -> backend NestSJ mediante POST '/final-stage/play'
-  private sendCommand(command: FinalBattleCommand): void {
-    if (this.pageState.submitting) {
+    if (this.pageState.loading || this.pageState.submitting) {
       return;
     }
 
-    this.pageState.submitting = true; // que el usuario no pueda elegir 'dos ataques seguidos' 
-    this.pageState.operationError = null;
-    this.pageState.operationErrorCode = null;
+    const requestId = ++this.latestRequestId;
+    this.pageState.loading = true;
+    this.pageState.error = null;
+    this.pageState.errorCode = null;
+    this.resetSelections();
 
-    this.postData<RespuestaBatallaBackend>('/final-stage/play', command).subscribe({
-    next: (respuestaActualizada) => {
-      this.pageState.submitting = false;
-      this.updateModel(respuestaActualizada);
-    },
-    error: (error: unknown) => {
-      this.pageState.submitting = false;
-      const apiError: ApiError = toApiError(error);
-      this.pageState.operationError = apiError.message;
-      this.pageState.operationErrorCode =
-        apiError.messageCode ?? 'BFF_FINAL_STAGE_REFRESH_FAILED';
+    this.getData<RespuestaBatallaBackend>('/final-stage').subscribe({
+      next: (response) => {
+        // Si llegó una respuesta vieja de una petición anterior, la descartamos
+        if (requestId !== this.latestRequestId) {
+          return;
+        }
+        this.pageState.loading = false;
+        this.pageState.needsRefresh = false;
+        this.pageState.operationError = null;
+        this.pageState.operationErrorCode = null;
+        this.updateModel(response);
+      },
+      error: (error: unknown) => {
+        if (requestId !== this.latestRequestId) {
+          return;
+        }
+        const apiError = toApiError(error);
+        this.pageState.loading = false;
+        this.pageState.needsRefresh = true; // Si falló, obligamos a refrescar
+        this.pageState.status = 'ERROR';
+        this.pageState.error = apiError.message;
+        this.pageState.errorCode = apiError.messageCode;
       },
     });
   }
 
-  // obtiene las acciones filtradas por el contexto visual actual -> (si estas en inventario o en héroes))
+  // Envía jugadas o comandos mediante POST '/final-stage/play'
+  private sendCommand(command: FinalBattleCommand): void {
+    const state = this.pageState;
+    if (state.loading || state.submitting || state.needsRefresh) {
+      return;
+    }
+
+    if (command.type === 'START' && state.status !== 'READY' && state.status !== 'ACTIVE') {
+      return;
+    }
+
+    if (
+      command.type === 'CHOOSE_ACTION' &&
+      !state.data?.actions?.some((action) => action.actionId === command.actionId)
+    ) {
+      return;
+    }
+
+    const requestId = ++this.latestRequestId;
+    state.submitting = true;
+    state.operationError = null;
+    state.operationErrorCode = null;
+
+    this.postData<RespuestaBatallaBackend>('/final-stage/play', command).subscribe({
+      next: (response) => {
+        if (requestId !== this.latestRequestId) {
+          return;
+        }
+        state.submitting = false;
+        state.needsRefresh = false;
+        this.updateModel(response);
+      },
+      error: (error: unknown) => {
+        if (requestId !== this.latestRequestId) {
+          return;
+        }
+        const apiError: ApiError = toApiError(error);
+        state.submitting = false;
+        state.needsRefresh = true;
+        state.operationError = apiError.message;
+        state.operationErrorCode = apiError.messageCode;
+        this.resetSelections();
+      },
+    });
+  }
+
+  // Filtra acciones según si el usuario está en el inventario o mirando un héroe
   private getAvailableActionsForCurrentContext(): FinalBattleLegalAction[] {
     if (!this.pageState.data?.actions) {
       return [];
     }
 
-    // inventario: acciones de items
+    // Inventario: ahora incluye consumibles reales, jugadas en equipo y cambio de estrategia
     if (this.pageState.tab === 'inventory') {
-      return this.pageState.data.actions.filter(
-        (action) => action.category === 'item' || action.actionCode?.startsWith('item_'),
+      return this.pageState.data.actions.filter((action) =>
+        ['POWER_UP', 'TEAM_ACTION', 'CHANGE_STRATEGY'].includes(action.actionCode),
       );
     }
 
-    // habilidades: acciones del héroe seleccionado
     if (!this.pageState.selectedHeroId) {
       return [];
     }
 
+    // Héroes: acciones donde el personaje seleccionado es el atacante/actor
     return this.pageState.data.actions.filter(
       (action) => action.actorHeroId === this.pageState.selectedHeroId,
     );
   }
 
-  // resuelve el estado de la pantalla a partir de los datos recibidos del BFF (si viene vacío, listo, activo o completado))
+  // Define el estado visual: si está vacío, listo, activo o terminado
   private resolveBattleStatus(data: FinalBattleModel | null): BattleStatus {
     if (!data || !data.state) {
       return 'EMPTY';
@@ -290,85 +331,98 @@ export class FinalBattleService extends BaseApiService { // hereda de
     return data.state.status ?? 'READY';
   }
 
-  // función de Limpieza -> limpia selecciones temporales al actualizarse la batalla
+  // Limpia selecciones temporales para no arrastrar botones marcados de turnos viejos
   private resetSelections(): void {
     this.pageState.selectedActionId = null;
     this.pageState.selectedGroup = null;
     this.pageState.actionCode = null;
   }
 
-  // adapta la respuesta cruda del BFF al formato estructurado que consume el HTML
+  // Mapea y limpia el JSON crudo del backend al formato que necesita el HTML
   private updateModel(respuesta: RespuestaBatallaBackend | null): void {
     if (!respuesta) {
+      this.pageState.data = null;
+      this.pageState.status = 'EMPTY';
+      this.pageState.selectedHeroId = null;
+      this.resetSelections();
       return;
     }
 
-    //---- TRANSFORMACION DE DATOS DEL BACKEND A LA VISTA ----//
-    // 1 convierte cada personaje uno por uno para que use las propiedades que necesita nuestra vista
-    const convertirHeroe = (h: HeroeDelBackend): FinalBattleHero => ({
-      id: h.id ?? h.heroId ?? '',
-      displayName: h.displayName ?? h.name ?? h.heroId ?? '',
-      role: h.role,
-      energy: h.energy ?? h.currentEnergy ?? 0,
-      maxEnergy: h.maxEnergy ?? h.maximumEnergy ?? 100,
-      ap: h.ap ?? h.currentAbilityPoints ?? 0,
-      maxAp: h.maxAp ?? h.maximumAbilityPoints ?? 10,
-      isKnockedOut: Boolean(
-        h.isKnockedOut || h.condition === 'KNOCKED_OUT' || h.condition === 'DEFEATED'
-      ),
-    });
+    // Función interna: arma el equipo uniendo datos mecánicos con los perfiles del backend
+    const armarEquipo = (
+      equipo?: EquipoDelBackend,
+      perfiles: HeroProfileBackend[] = [],
+    ): FinalBattleSide => {
+      const convertirHeroe = (h: HeroeDelBackend): FinalBattleHero => {
+        const id = h.heroId ?? h.id ?? '';
+        // Rescata el nombre y rol real desde los perfiles para que no quede vacío
+        const profile = perfiles.find((hero) => hero.id === id);
+        return {
+          id,
+          displayName: profile?.displayName ?? h.displayName ?? h.name ?? id,
+          role: profile?.roles.primary ?? h.role,
+          energy: h.currentEnergy ?? h.energy ?? 0,
+          maxEnergy: h.maximumEnergy ?? h.maxEnergy ?? 0,
+          ap: h.currentAbilityPoints ?? h.ap ?? 0,
+          maxAp: h.maximumAbilityPoints ?? h.maxAp ?? 0,
+          isKnockedOut: Boolean(h.isKnockedOut || h.condition === 'KNOCKED_OUT'),
+        };
+      };
 
-    // 2 Separación de equipos --> Separa los heroes en titulares (activos) y suplentes (banco
-    const armarEquipo = (equipo?: EquipoDelBackend): FinalBattleSide => {
-      const listaHeroes = equipo?.heroes ?? [];
-
+      const heroes = equipo?.heroes ?? [];
       return {
         teamId: equipo?.teamId ?? '',
-        strategyCode: equipo?.strategyCode,
-        activeHeroes: listaHeroes
-          .filter((h) => h.status === 'ACTIVE')
-          .map(convertirHeroe),
-        reserveHeroes: listaHeroes
-          .filter((h) => h.status === 'INACTIVE')
-          .map(convertirHeroe),
+        strategyCode: equipo?.strategyCode, // Mantiene la estrategia viva
+        activeHeroes: heroes.filter((h) => h.status === 'ACTIVE').map(convertirHeroe),
+        reserveHeroes: heroes.filter((h) => h.status === 'INACTIVE').map(convertirHeroe),
       };
     };
 
-    // 3 extrae el costo de energia y el rival seleccionado para usarlos directo en los botones
-    const accionesMapeadas: FinalBattleLegalAction[] | undefined = respuesta.actions?.map((acc: AccionDelBackend) => ({
-      actionId: acc.actionId,
-      actionCode: acc.actionCode,
-      category: acc.category,
-      actorHeroId: acc.actorHeroId,
-      outgoingHeroId: acc.outgoingHeroId,
-      incomingHeroId: acc.incomingHeroId,
-      label: acc.label,
-      description: acc.description,
-      apCost: acc.cost?.abilityPoints,
-      targetHeroId: acc.target?.targetId ?? acc.incomingHeroId,
-      targetScope: acc.target?.targetType,
-    }));
-
-    // 4 arma el modelo final uniendo los heroes, las acciones y la historia del combate
-    const batallaMapeada: FinalBattleModel = {
+    // Construye el modelo final con la información del combate, Doom y consumibles
+    const data: FinalBattleModel = {
       state: respuesta.state ?? null,
       teams: respuesta.teams
         ? {
-            player: armarEquipo(respuesta.teams.player),
-            opponent: armarEquipo(respuesta.teams.opponent),
+            player: armarEquipo(respuesta.teams.player, respuesta.player?.heroProfiles ?? []),
+            opponent: armarEquipo(respuesta.teams.opponent, respuesta.opponent?.heroProfiles ?? []),
+            doom: respuesta.teams.doom,
           }
         : undefined,
-      actions: accionesMapeadas,
+      actions:
+        respuesta.actions?.map((acc: AccionDelBackend) => ({
+          actionId: acc.actionId,
+          actionCode: acc.actionCode,
+          category: acc.category,
+          actorHeroId: acc.actorHeroId,
+          outgoingHeroId: acc.outgoingHeroId, // Quién sale en el SWAP
+          incomingHeroId: acc.incomingHeroId, // Quién entra en el SWAP
+          label: acc.label,
+          description: acc.description,
+          apCost: acc.cost?.abilityPoints,
+          targetHeroId: acc.target?.targetId ?? acc.incomingHeroId, // Fallback clave para el SWAP
+          targetScope: acc.target?.targetType,
+          targetSide: acc.target?.sideCode, // Distingue si apuntás a rival, aliado o Doom
+          itemId: acc.itemId,
+          strategyCode: acc.strategyCode,
+        })) ?? [],
       events: respuesta.events ?? [],
       inventory: respuesta.inventory ?? [],
       strategies: respuesta.strategies ?? [],
       receipt: respuesta.receipt,
     };
 
+    this.pageState.data = data;
+    this.pageState.status = this.resolveBattleStatus(data);
 
-    // 5 actualiza la pantalla con la nueva información y resetea los clics anteriores
-    this.pageState.data = batallaMapeada;
-    this.pageState.status = this.resolveBattleStatus(batallaMapeada);
+    // Si el héroe que estaba seleccionado cayó noqueado o ya no está activo, lo deselecciona
+    if (
+      !data.teams?.player.activeHeroes.some(
+        (hero) => hero.id === this.pageState.selectedHeroId && !hero.isKnockedOut,
+      )
+    ) {
+      this.pageState.selectedHeroId = null;
+    }
+
     this.resetSelections();
   }
 }
