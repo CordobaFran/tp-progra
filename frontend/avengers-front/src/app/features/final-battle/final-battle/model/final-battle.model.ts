@@ -21,6 +21,8 @@ export interface FinalBattleLegalAction {
   label?: string; // texto legible para el botón -> 'lanzar rayo'
   description?: string; // breve descripción de lo que hace
   apCost?: number; // cuanto cuesta de stamina o mana del héroe
+  outgoingHeroId?: string;
+  incomingHeroId?: string;
 }
 
 // Representación de un heroe en la batalla final
@@ -40,6 +42,7 @@ export interface FinalBattleSide {
   teamId: string;
   activeHeroes: FinalBattleHero[]; // quienes están activos y quienes en la banca 
   reserveHeroes: FinalBattleHero[];
+  strategyCode?: string;
 }
 
 // modelo principal de la Batalla Final devuelto por el BFF
@@ -119,12 +122,15 @@ export interface AccionDelBackend {
     targetId?: string;
     targetType?: 'HERO' | 'TEAM';
   };
+  outgoingHeroId?: string;
+  incomingHeroId?: string;
 }
 
 // interfaz para saber como viene el 'equipo' desde el backend
 export interface EquipoDelBackend {
   teamId?: string;
   heroes?: HeroeDelBackend[];
+  strategyCode?: string;
 }
 
 // interfaz para la respuesta general cruda del backend

@@ -300,6 +300,7 @@ export class FinalBattleService extends BaseApiService { // hereda de
 
       return {
         teamId: equipo?.teamId ?? '',
+        strategyCode: equipo?.strategyCode,
         activeHeroes: listaHeroes
           .filter((h) => h.status === 'ACTIVE')
           .map(convertirHeroe),
@@ -315,10 +316,12 @@ export class FinalBattleService extends BaseApiService { // hereda de
       actionCode: acc.actionCode,
       category: acc.category,
       actorHeroId: acc.actorHeroId,
+      outgoingHeroId: acc.outgoingHeroId,
+      incomingHeroId: acc.incomingHeroId,
       label: acc.label,
       description: acc.description,
       apCost: acc.cost?.abilityPoints,
-      targetHeroId: acc.target?.targetId,
+      targetHeroId: acc.target?.targetId ?? acc.incomingHeroId,
       targetScope: acc.target?.targetType,
     }));
 
@@ -337,6 +340,11 @@ export class FinalBattleService extends BaseApiService { // hereda de
       strategies: respuesta.strategies ?? [],
       receipt: respuesta.receipt,
     };
+
+    const rawPlayer = (respuesta as { player?: { strategyCode?: string } })?.player;
+    if (rawPlayer?.strategyCode && batallaMapeada.teams?.player) {
+      batallaMapeada.teams.player.strategyCode = rawPlayer.strategyCode;
+    }
 
     // 5 actualiza la pantalla con la nueva información y resetea los clics anteriores
     this.pageState.data = batallaMapeada;
