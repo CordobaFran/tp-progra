@@ -64,18 +64,21 @@ export class FinalBattleService extends BaseApiService { // hereda de
     return this.pageState; 
   }
 
-  /// entrega la vista para el panel narrativo de Ema
+  // entrega la vista para el panel narrativo de Ema
   getNarrative(): FinalNarrativeViewModel {
     const rawEvents = (this.pageState.data?.events ?? []) as Array<{
       turn?: number;
       message?: string;
       actorHeroId?: string;
       actionCode?: string;
+      narrative?: {
+        lines?: Array<{ text?: string }>;
+      };
     }>;
 
     const mappedEvents: FinalNarrativeEntry[] = rawEvents.map((evt) => ({
       turn: evt.turn,
-      message: evt.message,
+      message: evt.message ?? evt.narrative?.lines?.[0]?.text ?? '',
       actorHeroId: evt.actorHeroId,
       actionCode: evt.actionCode,
     }));
@@ -362,10 +365,6 @@ export class FinalBattleService extends BaseApiService { // hereda de
       receipt: respuesta.receipt,
     };
 
-    const rawPlayer = (respuesta as { player?: { strategyCode?: string } })?.player;
-    if (rawPlayer?.strategyCode && batallaMapeada.teams?.player) {
-      batallaMapeada.teams.player.strategyCode = rawPlayer.strategyCode;
-    }
 
     // 5 actualiza la pantalla con la nueva información y resetea los clics anteriores
     this.pageState.data = batallaMapeada;
