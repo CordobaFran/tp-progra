@@ -17,13 +17,20 @@ import {
   RespuestaBatallaBackend,
 } from '../model/final-battle.model';
 
+export interface FinalNarrativeEntry {
+  turn?: number;
+  message?: string;
+  actorHeroId?: string;
+  actionCode?: string;
+}
+
 // Contrato para el panel de narrativa -> Ema 
 export interface FinalNarrativeViewModel {
   status: BattleStatus;
   error: string | null;
   lang: string;
   state: FinalBattleModel['state'];
-  events: unknown[];
+  events: FinalNarrativeEntry[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -57,14 +64,28 @@ export class FinalBattleService extends BaseApiService { // hereda de
     return this.pageState; 
   }
 
-  // entrega la vista para el panel narrativo de Ema
+  /// entrega la vista para el panel narrativo de Ema
   getNarrative(): FinalNarrativeViewModel {
+    const rawEvents = (this.pageState.data?.events ?? []) as Array<{
+      turn?: number;
+      message?: string;
+      actorHeroId?: string;
+      actionCode?: string;
+    }>;
+
+    const mappedEvents: FinalNarrativeEntry[] = rawEvents.map((evt) => ({
+      turn: evt.turn,
+      message: evt.message,
+      actorHeroId: evt.actorHeroId,
+      actionCode: evt.actionCode,
+    }));
+
     return {
       status: this.pageState.status,
       error: this.pageState.error,
       lang: this.pageState.lang,
       state: this.pageState.data?.state ?? null,
-      events: this.pageState.data?.events ?? [],
+      events: mappedEvents,
     };
   }
 
