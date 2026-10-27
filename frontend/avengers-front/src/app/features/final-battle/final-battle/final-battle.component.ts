@@ -9,6 +9,17 @@ import {
 } from './model/final-battle.model';
 import { HeroArtworkResolverService } from 'src/app/core/services/hero-artwork-resolver.service';
 
+// Tipado extendido seguro para compilar sin errores mientras se actualiza el modelo compartido
+type SafeLegalAction = FinalBattleLegalAction & {
+  outgoingHeroId?: string;
+  incomingHeroId?: string;
+  target?: { targetId?: string; targetType?: 'HERO' | 'TEAM' } | null;
+};
+
+type SafeSide = FinalBattleSide & {
+  strategyCode?: string;
+};
+
 @Component({
   selector: 'app-final-battle',
   templateUrl: './final-battle.component.html',
@@ -38,12 +49,12 @@ export class FinalBattleComponent implements OnInit {
     return this.finalBattleService.getNarrative();
   }
 
-  get playerSide(): FinalBattleSide | null {
-    return this.vm.data?.teams?.player ?? null;
+  get playerSide(): SafeSide | null {
+    return (this.vm.data?.teams?.player as SafeSide) ?? null;
   }
 
-  get opponentSide(): FinalBattleSide | null {
-    return this.vm.data?.teams?.opponent ?? null;
+  get opponentSide(): SafeSide | null {
+    return (this.vm.data?.teams?.opponent as SafeSide) ?? null;
   }
 
   get currentTurn(): number {
@@ -55,14 +66,7 @@ export class FinalBattleComponent implements OnInit {
   }
 
   get currentStrategy(): string {
-    const data = this.vm.data as any;
-    if (data?.teams?.player?.strategyCode) {
-      return data.teams.player.strategyCode;
-    }
-    if (data?.player?.strategyCode) {
-      return data.player.strategyCode;
-    }
-    return '';
+    return this.playerSide?.strategyCode ?? '';
   }
 
   get isAbilitiesTab(): boolean {
@@ -74,46 +78,44 @@ export class FinalBattleComponent implements OnInit {
   }
 
   get availableActionCodes(): string[] {
-    const actions = (this.vm.data?.actions ?? []) as any[];
-
-    if (this.isAbilitiesTab) {
-      const codes: string[] = [];
-
-      if (this.vm.selectedHeroId) {
-        actions
-          .filter((a) => a.actorHeroId === this.vm.selectedHeroId)
-          .forEach((a) => {
-            if (!codes.includes(a.actionCode)) {
-              codes.push(a.actionCode);
-            }
-          });
-      }
-
-      const hasSwap = actions.some((a) => a.actionCode === 'SWAP');
-      if (hasSwap && !codes.includes('SWAP')) {
-        codes.push('SWAP');
-      }
-
-      return codes;
+    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
+    if (!this.isAbilitiesTab) {
+      return [];
     }
 
-    return [];
+    const codes: string[] = [];
+
+    if (this.vm.selectedHeroId) {
+      actions
+        .filter((a) => a.actorHeroId === this.vm.selectedHeroId)
+        .forEach((a) => {
+          if (!codes.includes(a.actionCode)) {
+            codes.push(a.actionCode);
+          }
+        });
+    }
+
+    if (actions.some((a) => a.actionCode === 'SWAP')) {
+      codes.push('SWAP');
+    }
+
+    return codes;
   }
 
   get inventoryActionCodes(): string[] {
-    const actions = (this.vm.data?.actions ?? []) as any[];
+    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
     return Array.from(
       new Set(actions.filter((a) => a.actionCode === 'TEAM_ACTION').map((a) => a.actionCode)),
     );
   }
 
-  get strategyActions(): FinalBattleLegalAction[] {
-    const actions = (this.vm.data?.actions ?? []) as any[];
+  get strategyActions(): SafeLegalAction[] {
+    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
     return actions.filter((a) => a.actionCode === 'CHANGE_STRATEGY');
   }
 
-  getActionDescriptor(actionCode: string): FinalBattleLegalAction | undefined {
-    const actions = (this.vm.data?.actions ?? []) as any[];
+  getActionDescriptor(actionCode: string): SafeLegalAction | undefined {
+    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
     if (actionCode === 'SWAP') {
       return actions.find((a) => a.actionCode === 'SWAP');
     }
@@ -125,26 +127,17 @@ export class FinalBattleComponent implements OnInit {
     return actions.find((a) => a.actionCode === actionCode);
   }
 
-  get legalTargetsForSelectedAction(): any[] {
-    const actions = (this.vm.data?.actions ?? []) as any[];
-    if (!this.vm.actionCode) return [];
+  get legalTargetsForSelectedAction(): SafeLegalAction[] {
+    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
+    if (!this.vm.actionCode) {
+      return [];
+    }
 
     if (this.vm.actionCode === 'SWAP') {
-      const activeHero = this.playerSide?.activeHeroes?.find(
-        (h) => h.id === this.vm.selectedHeroId,
+      const activeId = this.vm.selectedHeroId || this.playerSide?.activeHeroes[0]?.id;
+      return actions.filter(
+        (a) => a.actionCode === 'SWAP' && (!activeId || a.outgoingHeroId === activeId),
       );
-      const activeName = activeHero?.displayName?.toLowerCase() || '';
-
-      return actions.filter((a) => {
-        if (a.actionCode !== 'SWAP') return false;
-        if (a.outgoingHeroId && this.vm.selectedHeroId) {
-          return a.outgoingHeroId === this.vm.selectedHeroId;
-        }
-        if (activeName && a.description) {
-          return a.description.toLowerCase().includes(`cambia a ${activeName}`);
-        }
-        return true;
-      });
     }
 
     if (this.vm.actionCode === 'TEAM_ACTION') {
@@ -161,53 +154,49 @@ export class FinalBattleComponent implements OnInit {
   }
 
   isLegalTarget(heroId: string): boolean {
-    if (this.vm.actionCode === 'SWAP') {
-      const reserveHero = this.playerSide?.reserveHeroes?.find((h) => h.id === heroId);
-      const reserveName = reserveHero?.displayName?.toLowerCase() || '';
-      return this.legalTargetsForSelectedAction.some((a) => {
-        if (a.incomingHeroId === heroId || a.targetHeroId === heroId) return true;
-        if (reserveName && a.description) {
-          return a.description.toLowerCase().includes(`por ${reserveName}`);
-        }
-        return false;
-      });
-    }
-
-    return this.legalTargetsForSelectedAction.some((a) => a.targetHeroId === heroId);
+    return this.legalTargetsForSelectedAction.some((a) => {
+      if (a.actionCode === 'SWAP') {
+        return a.incomingHeroId === heroId || a.targetHeroId === heroId;
+      }
+      return a.targetHeroId === heroId || a.target?.targetId === heroId;
+    });
   }
 
   get hasTeamTargetOption(): boolean {
-    if (!this.vm.actionCode) return false;
-    const actions = (this.vm.data?.actions ?? []) as any[];
+    if (!this.vm.actionCode) {
+      return false;
+    }
+    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
 
     return actions.some((a) => {
       const matchHero = this.isAbilitiesTab ? a.actorHeroId === this.vm.selectedHeroId : true;
-      return matchHero && a.actionCode === this.vm.actionCode && a.targetScope === 'TEAM';
+      return (
+        matchHero &&
+        a.actionCode === this.vm.actionCode &&
+        (a.targetScope === 'TEAM' || a.target?.targetType === 'TEAM')
+      );
     });
   }
 
   get isTeamTargetSelected(): boolean {
-    const sel = this.selectedAction as any;
-    return sel?.targetScope === 'TEAM';
+    const sel = this.selectedAction as SafeLegalAction | null;
+    return sel?.targetScope === 'TEAM' || sel?.target?.targetType === 'TEAM';
   }
 
-  get selectedAction(): FinalBattleLegalAction | null {
-    return this.finalBattleService.selectedAction();
+  get selectedAction(): SafeLegalAction | null {
+    return (this.finalBattleService.selectedAction() as SafeLegalAction) ?? null;
   }
 
   isReserveSelected(heroId: string): boolean {
-    const sel = this.selectedAction as any;
-    if (!sel || sel.actionCode !== 'SWAP') return false;
-    if (sel.incomingHeroId === heroId || sel.targetHeroId === heroId) return true;
-
-    const reserveHero = this.playerSide?.reserveHeroes?.find((h) => h.id === heroId);
-    const reserveName = reserveHero?.displayName?.toLowerCase() || '';
-    return Boolean(reserveName && sel.description?.toLowerCase().includes(`por ${reserveName}`));
+    const sel = this.selectedAction;
+    return (
+      sel?.actionCode === 'SWAP' && (sel.incomingHeroId === heroId || sel.targetHeroId === heroId)
+    );
   }
 
   isHeroTargetSelected(heroId: string): boolean {
-    const sel = this.selectedAction as any;
-    return sel?.targetHeroId === heroId;
+    const sel = this.selectedAction;
+    return sel?.targetHeroId === heroId || sel?.target?.targetId === heroId;
   }
 
   canExecute(): boolean {
@@ -215,7 +204,9 @@ export class FinalBattleComponent implements OnInit {
   }
 
   onSelectHero(hero: FinalBattleHero): void {
-    if (hero.isKnockedOut) return;
+    if (hero.isKnockedOut) {
+      return;
+    }
     const wasSwap = this.vm.actionCode === 'SWAP';
     this.finalBattleService.selectHero(hero.id);
     if (wasSwap) {
@@ -237,43 +228,31 @@ export class FinalBattleComponent implements OnInit {
   }
 
   onSelectHeroTarget(heroId: string): void {
-    const matchingAction = this.legalTargetsForSelectedAction.find(
-      (a) => a.targetHeroId === heroId,
-    );
+    const matchingAction = this.legalTargetsForSelectedAction.find((a) => {
+      return a.targetHeroId === heroId || a.target?.targetId === heroId;
+    });
     if (matchingAction) {
       this.finalBattleService.selectTarget(matchingAction.actionId);
     }
   }
 
   onSelectReserveTarget(reserveHeroId: string): void {
-    const actions = (this.vm.data?.actions ?? []) as any[];
-    const activeHero =
-      this.playerSide?.activeHeroes?.find((h) => h.id === this.vm.selectedHeroId) ||
-      this.playerSide?.activeHeroes?.[0];
-    const reserveHero = this.playerSide?.reserveHeroes?.find((h) => h.id === reserveHeroId);
+    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
+    const activeHeroId = this.vm.selectedHeroId || this.playerSide?.activeHeroes[0]?.id;
 
-    const activeName = activeHero?.displayName?.toLowerCase() || '';
-    const reserveName = reserveHero?.displayName?.toLowerCase() || '';
-
-    let swapAction = actions.find((a) => {
-      if (a.actionCode !== 'SWAP') return false;
-      if (a.outgoingHeroId === activeHero?.id && a.incomingHeroId === reserveHeroId) return true;
-      if (activeName && reserveName && a.description) {
-        const desc = a.description.toLowerCase();
-        return desc.includes(`cambia a ${activeName}`) && desc.includes(`por ${reserveName}`);
-      }
-      return false;
-    });
+    let swapAction = actions.find(
+      (a) =>
+        a.actionCode === 'SWAP' &&
+        a.outgoingHeroId === activeHeroId &&
+        (a.incomingHeroId === reserveHeroId || a.targetHeroId === reserveHeroId),
+    );
 
     if (!swapAction) {
-      swapAction = actions.find((a) => {
-        if (a.actionCode !== 'SWAP') return false;
-        if (a.incomingHeroId === reserveHeroId) return true;
-        if (reserveName && a.description) {
-          return a.description.toLowerCase().includes(`por ${reserveName}`);
-        }
-        return false;
-      });
+      swapAction = actions.find(
+        (a) =>
+          a.actionCode === 'SWAP' &&
+          (a.incomingHeroId === reserveHeroId || a.targetHeroId === reserveHeroId),
+      );
     }
 
     if (swapAction) {
@@ -283,10 +262,14 @@ export class FinalBattleComponent implements OnInit {
   }
 
   onSelectTeamTarget(): void {
-    const actions = (this.vm.data?.actions ?? []) as any[];
+    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
     const teamAction = actions.find((a) => {
       const matchHero = this.isAbilitiesTab ? a.actorHeroId === this.vm.selectedHeroId : true;
-      return matchHero && a.actionCode === this.vm.actionCode && a.targetScope === 'TEAM';
+      return (
+        matchHero &&
+        a.actionCode === this.vm.actionCode &&
+        (a.targetScope === 'TEAM' || a.target?.targetType === 'TEAM')
+      );
     });
 
     if (teamAction) {
@@ -294,7 +277,7 @@ export class FinalBattleComponent implements OnInit {
     }
   }
 
-  onSelectStrategyAction(action: FinalBattleLegalAction): void {
+  onSelectStrategyAction(action: SafeLegalAction): void {
     this.finalBattleService.setActionCode(action.actionCode);
     this.finalBattleService.selectTarget(action.actionId);
   }
@@ -327,8 +310,12 @@ export class FinalBattleComponent implements OnInit {
     return code;
   }
 
-  trackByActionId(_index: number, action: FinalBattleLegalAction): string {
+  trackByActionId(_index: number, action: SafeLegalAction): string {
     return action.actionId;
+  }
+
+  trackByEventIndex(index: number): number {
+    return index;
   }
 
   portraitPath(heroId: string): string {

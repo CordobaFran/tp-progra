@@ -50,15 +50,18 @@
     <section *ngIf="vm.status === 'ACTIVE'" class="functional-panel final-battle-panel">
       <div class="panel-heading-row">
         <h2 class="panel-title">{{ translate('r9.arena') }}</h2>
+        <div class="turn-indicator" *ngIf="currentTurn > 0">
+          <span>{{ translate('r9.turn') }}: {{ currentTurn }}</span>
+        </div>
       </div>
 
-      <!-- GRILLA PRINCIPAL DE COMBATE -->
+      <!-- GRILLA DE 3 COLUMNAS: JUGADOR | RIVAL | NARRATIVA -->
       <div class="battle-columns">
         <!-- COLUMNA 1: EQUIPO DEL JUGADOR -->
         <section
           class="team-column player-team"
           aria-labelledby="player-team-heading"
-          *ngIf="vm.data?.teams?.player as playerSide"
+          *ngIf="playerSide"
         >
           <header
             class="team-header"
@@ -124,8 +127,11 @@
               </div>
             </div>
 
-            <!-- Reserva -->
-            <div class="formation reserve" *ngIf="playerSide.reserveHeroes.length > 0">
+            <!-- Reserva Jugador -->
+            <div
+              class="formation reserve"
+              *ngIf="playerSide.reserveHeroes && playerSide.reserveHeroes.length > 0"
+            >
               <span class="formation-label">{{ translate('r9.reserve') }}</span>
               <div class="hero-list">
                 <article
@@ -287,7 +293,7 @@
         <section
           class="team-column opponent-team"
           aria-labelledby="opponent-team-heading"
-          *ngIf="vm.data?.teams?.opponent as opponentSide"
+          *ngIf="opponentSide"
         >
           <header class="team-header">
             <h3 class="panel-title" id="opponent-team-heading">
@@ -337,7 +343,11 @@
               </div>
             </div>
 
-            <div class="formation reserve" *ngIf="opponentSide.reserveHeroes.length > 0">
+            <!-- Reserva Rival -->
+            <div
+              class="formation reserve"
+              *ngIf="opponentSide.reserveHeroes && opponentSide.reserveHeroes.length > 0"
+            >
               <span class="formation-label">{{ translate('r9.reserve') }}</span>
               <div class="hero-list">
                 <article

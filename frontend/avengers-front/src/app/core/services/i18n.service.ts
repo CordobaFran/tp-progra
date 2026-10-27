@@ -1302,7 +1302,7 @@ const DICTIONARY: Record<AppLanguage, Record<AppCopyKey, string>> = {
     'r9.energyFull': 'ENERGÍA',
     'r9.ap': 'PA',
     'r9.apFull': 'PUNTOS DE HABILIDAD',
-    'r9.abandon': 'ABANDON',
+    'r9.abandon': 'ABANDONAR',
     'r10.refresh': 'Actualizar',
     'r10.status': 'Estado',
     'r10.ready': 'Lista para iniciar',
