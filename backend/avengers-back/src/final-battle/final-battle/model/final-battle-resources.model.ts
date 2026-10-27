@@ -1,5 +1,4 @@
 import {
-  FinalHeroApi,
   FinalJourneyTeamsApi,
   FinalStrategyApi,
 } from '../../../basic/model/game-api/final-contract.model';
