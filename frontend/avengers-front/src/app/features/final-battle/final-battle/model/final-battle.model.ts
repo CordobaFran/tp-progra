@@ -1,116 +1,131 @@
-// asegurarse de que back y front usen los mismos nombres y tipo de variables -> Frontend / BFF Backend
+// Imports que pidió la guía para los eventos del log y el estado narrativo
+import { FinalStageEventApi } from '../../live-events/model/live-events.model';
+import { FinalNarrativeStateModel } from '../narrative/model/final-narrative.model';
 
-export type BattleStatus = 'READY' | 'ACTIVE' | 'COMPLETED' | 'EMPTY' | 'ERROR';
-// estados válidos en los que puede estar la pantalla de batalla
+// Estados posibles de la pantalla
+export type BattleStatus = 'EMPTY' | 'READY' | 'ACTIVE' | 'COMPLETED' | 'ERROR';
 export type ActionCategory = 'attack' | 'ability' | 'item' | 'swap' | 'strategy';
 
-// Ordenes de juego válidos, empaquetan los clicks/botones del usuario (iniciar, habilidad o rendirse) para el POST del Back
-export type FinalBattleCommand =
-  | { type: 'START' } 
-  | { type: 'CHOOSE_ACTION'; actionId: string }
-  | { type: 'ABANDON' };
-
-// Modelo de una acción/ejecución valida devuelta por la API
-export interface FinalBattleLegalAction {
-  actionId: string; // El id que le puso la Game API a esta jugada
-  actionCode: string;
-  category?: ActionCategory;
-  actorHeroId?: string; // que heroe puede hacerla (ej: Ironman)
-  targetScope?: 'HERO' | 'TEAM'; // Si afecta a uno solo o a todo el equipo
-  targetHeroId?: string; // ataque u habilidad que tires al rival
-  label?: string; // texto legible para el botón -> 'lanzar rayo'
-  description?: string; // breve descripción de lo que hace
-  apCost?: number; // cuanto cuesta de stamina o mana del héroe
-  outgoingHeroId?: string;
-  incomingHeroId?: string;
-}
-
-// Representación de un heroe en la batalla final
+// Molde de cada héroe adaptado para que Leo pinte la UI
 export interface FinalBattleHero {
   id: string;
-  displayName: string; // nombre del heroe
-  role?: string;       
-  energy?: number; // barra de energia
-  maxEnergy?: number; // 
-  ap?: number; // puntos de accion
-  maxAp?: number;
-  isKnockedOut?: boolean; // si está activo o fuera de combate
+  displayName: string;
+  role?: string;
+  energy: number;
+  maxEnergy: number;
+  ap: number;
+  maxAp: number;
+  isKnockedOut: boolean;
 }
 
-// lado del equipo (jugador o rival)
+// Bando/equipo con titulares, suplentes y la estrategia activa
 export interface FinalBattleSide {
   teamId: string;
-  activeHeroes: FinalBattleHero[]; // quienes están activos y quienes en la banca 
-  reserveHeroes: FinalBattleHero[];
   strategyCode?: string;
+  activeHeroes: FinalBattleHero[];
+  reserveHeroes: FinalBattleHero[];
 }
 
-// modelo principal de la Batalla Final devuelto por el BFF
-// todo lo que nos devuelve el Backend (BFF) en cada turno.
-// trae el estado actual, ambos equipos, las acciones válidas, eventos e inventario.
-// si el usuario todavía no arrancó el torneo, state viene en null.
+// Acción legal con soporte para objetivos, swaps, ítems y estrategias
+export interface FinalBattleLegalAction {
+  actionId: string;
+  actionCode: string;
+  category?: ActionCategory;
+  actorHeroId?: string;
+  targetScope?: 'HERO' | 'TEAM' | 'ANTAGONIST';
+  targetSide?: 'PLAYER' | 'OPPONENT' | 'DOOM';
+  itemId?: string;
+  strategyCode?: string;
+  targetHeroId?: string;
+  outgoingHeroId?: string;
+  incomingHeroId?: string;
+  label?: string;
+  description?: string;
+  apCost?: number;
+}
+
+// El estado general de la batalla final con Doom y eventos mecánicos
 export interface FinalBattleModel {
-  state: {
-    status: BattleStatus;
-    turn?: number;
-    phase?: string;
-    lifecycle?: string;
-    winnerTeamId?: string;
-    abandoned?: boolean;
-  } | null; // viene null
+  state:
+    | (FinalNarrativeStateModel & {
+        completion: {
+          outcomeCode: 'VICTORY' | 'DEFEAT' | 'ABANDON';
+          endingCode: string;
+          terminalReasonCode: string | null;
+        } | null;
+        doom?: FinalBattleDoom;
+      })
+    | null;
   teams?: {
     player: FinalBattleSide;
     opponent: FinalBattleSide;
+    doom?: FinalBattleDoom;
   };
   actions?: FinalBattleLegalAction[];
-  events?: unknown[];
-  inventory?: unknown[];
+  events?: FinalStageEventApi[];
+  inventory?: FinalBattleInventoryEntry[];
   strategies?: unknown[];
   receipt?: unknown;
 }
 
-// estado global de pantalla consumido por Leo en el Componente y HTML
-// servicio que proveera a Leo para que utilice en su HTML para dibujar cada componente
+// Estado de la pantalla con las banderas de carga y recarga obligatoria
 export interface FinalBattleViewModel {
   status: BattleStatus;
   error: string | null;
   errorCode: string | null;
-  data: FinalBattleModel | null; // Guarda la ultima respuesta limpia recibida del backend
+  data: FinalBattleModel | null;
   lang: string;
-  submitting: boolean; 
+  loading: boolean;
+  needsRefresh: boolean;
+  submitting: boolean;
   operationError: string | null;
   operationErrorCode: string | null;
   selectedHeroId: string | null;
-  selectedGroup: string | null; // estos 3 rastrean que heroe hizo click el usuario, habilidad y objetivo seleccionó
+  selectedGroup: string | null;
   selectedActionId: string | null;
-  tab: 'abilities' | 'inventory'; // si se están enviando las habilidades del heroe u objetos del inventario
+  tab: 'abilities' | 'inventory';
   actionCode: string | null;
 }
 
-// interfaz para saber como viene el 'héroe' crudo desde el backend
+// Comandos permitidos para enviar al BFF
+export interface FinalBattleCommand {
+  type: 'START' | 'CHOOSE_ACTION' | 'ABANDON';
+  actionId?: string;
+}
+
+// Tipado crudo del héroe que viene del backend
 export interface HeroeDelBackend {
-  heroId?: string;
   id?: string;
+  heroId?: string;
   displayName?: string;
   name?: string;
   role?: string;
-  currentEnergy?: number;
   energy?: number;
-  maximumEnergy?: number;
+  currentEnergy?: number;
   maxEnergy?: number;
-  currentAbilityPoints?: number;
-  maximumAbilityPoints?: number;
+  maximumEnergy?: number;
   ap?: number;
+  currentAbilityPoints?: number;
   maxAp?: number;
-  status?: string;
-  condition?: string;
+  maximumAbilityPoints?: number;
   isKnockedOut?: boolean;
+  condition?: string;
+  status?: 'ACTIVE' | 'INACTIVE';
 }
 
-// interfaz para saber como vienen las acciones crudas del backend
+// Tipado crudo del equipo que viene del backend
+export interface EquipoDelBackend {
+  teamId?: string;
+  strategyCode?: string;
+  heroes?: HeroeDelBackend[];
+}
+
+// Tipado crudo de la acción que viene del backend
 export interface AccionDelBackend {
   actionId: string;
   actionCode: string;
+  itemId?: string;
+  strategyCode?: string;
   category?: ActionCategory;
   actorHeroId?: string;
   label?: string;
@@ -118,31 +133,58 @@ export interface AccionDelBackend {
   cost?: {
     abilityPoints?: number;
   };
-  target?: {
-    targetId?: string;
-    targetType?: 'HERO' | 'TEAM';
-  };
   outgoingHeroId?: string;
   incomingHeroId?: string;
+  target?: {
+    targetId?: string;
+    targetType?: 'HERO' | 'TEAM' | 'ANTAGONIST';
+    sideCode?: 'PLAYER' | 'OPPONENT' | 'DOOM';
+  };
 }
 
-// interfaz para saber como viene el 'equipo' desde el backend
-export interface EquipoDelBackend {
-  teamId?: string;
-  heroes?: HeroeDelBackend[];
-  strategyCode?: string;
+// Perfil que manda el backend para nombres reales y roles
+export interface HeroProfileBackend {
+  id: string;
+  displayName: string;
+  roles: { primary: string };
 }
 
-// interfaz para la respuesta general cruda del backend
+// Datos de Doom para la batalla final
+export interface FinalBattleDoom {
+  narrativeCharacterId: string;
+  currentEnergy: number;
+  maximumEnergy: number;
+  threatLevelCode: string;
+}
+
+// Entradas del inventario (consumibles/power-ups)
+export interface FinalBattleInventoryEntry {
+  itemId: string;
+  quantity: number;
+  definition: { name: string };
+}
+
+// Respuesta completa cruda del endpoint /final-stage
 export interface RespuestaBatallaBackend {
+  player?: { heroProfiles: HeroProfileBackend[] } | null;
+  opponent?: { heroProfiles: HeroProfileBackend[] } | null;
   state?: FinalBattleModel['state'];
   teams?: {
     player?: EquipoDelBackend;
     opponent?: EquipoDelBackend;
+    doom?: FinalBattleDoom;
   };
+  doom?: FinalBattleDoom;
   actions?: AccionDelBackend[];
-  events?: unknown[];
-  inventory?: unknown[];
+  events?: FinalStageEventApi[];
+  inventory?: FinalBattleInventoryEntry[];
   strategies?: unknown[];
   receipt?: unknown;
 }
+
+// Type Alias: en caso que utilicen modelos en ingles
+export type FinalBattleResponse = RespuestaBatallaBackend;
+export type FinalBattleTeamApi = EquipoDelBackend;
+export type FinalBattleHeroApi = HeroeDelBackend;
+export type FinalBattleHeroProfile = HeroProfileBackend;
+export type FinalBattleActionApi = AccionDelBackend;
