@@ -32,7 +32,7 @@ export class ApplicationContextService {
     config: ConfigService,
   ) {
     this.language = config.get<string>('APP_LANG', 'es').toLowerCase() === 'en' ? 'en' : 'es';
-    this.teamId = config.get<string>('TEAM_ID', 'spider-man').trim().toLowerCase();
+    this.teamId = config.get<string>('TEAM_ID', 'hulk').trim().toLowerCase();
   }
 
   getCurrentTeamId(): string {

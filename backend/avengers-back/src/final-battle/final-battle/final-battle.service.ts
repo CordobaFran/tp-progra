@@ -136,7 +136,7 @@ export class FinalBattleService {
     }
     if (
       teams &&
-      (teams.variant !== state.variant ||
+      ((state.status !== 'COMPLETED' && teams.variant !== state.variant) ||
         teams.player.teamId !== state.participants.playerTeamId ||
         teams.opponent.teamId !== state.participants.opponentTeamId)
     ) {
