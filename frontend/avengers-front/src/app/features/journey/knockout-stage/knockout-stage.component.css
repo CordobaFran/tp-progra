@@ -1,7 +1,338 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .student-feature-shell {
   min-height: 100%;
+}
+
+.knockout-page {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px 20px 14px;
+  overflow: hidden;
+}
+
+.r6-header {
+  flex: 0 0 auto;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #1a2c3a;
+}
+
+.r6-title-row .page-title {
+  margin: 0;
+}
+
+.page-subtitle {
+  margin: 4px 0 0;
+}
+
+.knockout-workspace {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.retry-button {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin-top: 7px;
+  padding: 5px 9px;
+  font-size: calc(10px * var(--ui-font-scale));
+}
+
+.functional-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  padding: 8px 10px;
+  overflow: hidden;
+}
+
+.panel-heading-row {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 6px;
+}
+
+.knockout-tools {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 0;
+  margin-bottom: 8px;
+}
+
+.stage-filters {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filter-button {
+  flex: 0 0 auto;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid #273c55;
+  border-radius: 2px;
+  background: #091422;
+  color: #aeb9c8;
+  font-size: calc(10px * var(--ui-font-scale));
+  cursor: pointer;
+}
+
+.filter-button:hover {
+  border-color: var(--color-action);
+  color: #fff;
+}
+
+.filter-button.active {
+  border-color: var(--color-action);
+  background: var(--color-action-soft);
+  color: #fff;
+}
+
+.knockout-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.75rem 1rem 1.5rem;
+}
+
+.knockout-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.knockout-scroll::-webkit-scrollbar-track {
+  background: rgba(9, 18, 28, 0.4);
+}
+.knockout-scroll::-webkit-scrollbar-thumb {
+  background: #1a2636;
+  border-radius: 3px;
+}
+.knockout-scroll::-webkit-scrollbar-thumb:hover {
+  background: #2a3a50;
+}
+
+.matches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.match-card {
+  display: flex;
+  flex-direction: column;
+  background: #09121c;
+  border: 1px solid #1a2636;
+  border-radius: 2px;
+  padding: 0.75rem;
+  gap: 0.6rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.match-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #1a2636;
+  padding-bottom: 0.4rem;
+}
+
+.match-title {
+  font-family: Impact, 'Arial Narrow', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: #cbd3df;
+  text-transform: uppercase;
+}
+
+.status-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 2px;
+  letter-spacing: 0.04em;
+}
+
+.status-tag.played {
+  background: rgba(46, 204, 113, 0.12);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.4);
+}
+
+.status-tag.pending {
+  background: rgba(139, 155, 180, 0.12);
+  color: #8b9bb4;
+  border: 1px solid rgba(139, 155, 180, 0.4);
+}
+
+.match-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.team-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: #0d1522;
+  border: 1px solid #1a2636;
+  border-radius: 2px;
+}
+
+.team-item.is-player-team {
+  background: rgba(151, 132, 44, 0.3);
+}
+
+.team-item.is-winner {
+  border-color: #4cd964;
+  border-width: 3px;
+  box-shadow: 0 0 6px rgba(76, 217, 100, 0.5);
+}
+
+.team-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.portrait-cell {
+  position: relative;
+  width: 70px;
+  min-width: 70px;
+  aspect-ratio: 3 / 4;
+  border: 2px solid #1a2636;
+  border-radius: 2px;
+  background: #101a28;
+}
+
+.portrait-cell img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.player-star-badge {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  background: #4cd964;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  line-height: 1;
+  color: #09121c;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.team-details {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.team-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e0e6ed;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.winner-tag {
+  align-self: flex-start;
+  padding: 1px 4px;
+  background: rgba(76, 217, 100, 0.15);
+  border: 1px solid #4cd964;
+  border-radius: 2px;
+  color: #4cd964;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.team-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: 0.4rem;
+  flex: 0 0 80px;
+}
+
+.team-stats small {
+  font-size: 0.58rem;
+  color: #63758e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.team-stats strong {
+  color: #cbd3df;
+  font-size: 0.85rem;
+  font-family: monospace;
+}
+
+.match-divider {
+  text-align: center;
+  font-family: Impact, 'Arial Narrow', sans-serif;
+  font-size: 0.75rem;
+  color: #3b4c63;
+  letter-spacing: 0.05em;
+  margin: 1px 0;
+}
+
+.final-stage-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  padding-top: 1rem;
+}
+
+.final-match-card {
+  width: 100%;
+  max-width: 380px;
 }

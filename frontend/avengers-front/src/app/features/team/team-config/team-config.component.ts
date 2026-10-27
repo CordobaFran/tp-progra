@@ -50,7 +50,7 @@ export class TeamConfigComponent implements OnInit {
     const resolvedTeamId = this.appContextService.current?.teamId || 'hulk';
     this.teamId = resolvedTeamId;
 
-    // Consultamos la configuración con el ID dinámico
+    // Consultamos la configuracion con el ID dinamico
     this.teamConfigService.getTeamConfiguration(this.teamId).subscribe((datos: TeamConfigResponse) => {
       console.log('Respuesta del backend:', datos);
       this.configuracion = datos;
@@ -159,7 +159,7 @@ export class TeamConfigComponent implements OnInit {
     });
   }
 
-  // Filtra el catálogo en tiempo real según el texto ingresado
+
 // Filtra el catálogo en tiempo real según el texto ingresado
   get heroesFiltrados(): HeroItem[] {
     if (!this.terminoBusqueda.trim()) {
@@ -201,5 +201,15 @@ export class TeamConfigComponent implements OnInit {
     }
 
     config.companionIds = [...companions];
+
+    const miembros = [leaderId, ...companions];
+    this.heroes = this.catalogoHeroes.filter((h: HeroItem) => miembros.includes(h.id));
   }
+
+  cambiarEstrategia(nuevaEstrategia: string): void {
+  if (!this.configuracion?.configuration) {
+    return;
+  }
+  this.configuracion.configuration.strategy = nuevaEstrategia;
+}
 }

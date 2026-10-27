@@ -9,10 +9,14 @@ import {
   FinalRelationshipCatalogApi,
   FinalSimulateJourneyApi,
   FinalTeamConfigurationDataApi,
+  FinalJourneySummaryApi,
 } from './model/game-api/final-contract.model';
 import { HeroCatalogApi, RelationshipCatalogApi } from './model/game-api/hero-catalog.model';
 import {
   CurrentJourneyApi,
+  JourneyHistoryEventsApi,
+  JourneyHistoryStatisticsApi,
+  JourneyHistoryTeamsApi,
   JourneySpendingStrategy,
   KnockoutEncountersApi,
   KnockoutStagesApi,
@@ -117,6 +121,67 @@ export class GameFeatureApiService {
 
   history(teamId: string, lang: string) {
     return this.api.get<FinalHistoryApi>(`/teams/${teamId}/history`, { lang });
+  }
+
+  //agregado para r13
+
+  async historyJourneyDetail(teamId: string, attemptId: string, lang: string) {
+    const data = await this.api.get<FinalJourneySummaryApi>(`/teams/${teamId}/journeys/${attemptId}`, { lang });
+    return{
+        attemptId: data.attemptId,
+        teamId: data.teamId,
+        status: data.status,
+        spendingStrategyCode: data.spendingStrategyCode,
+        createdAt: data.createdAt,
+        completedAt: data.completedAt,        
+        configuration: data.configuration,
+        finalists:
+        {
+          playerTeamId: data.finalists.playerTeamId,
+          opponentTeamId: data.finalists.opponentTeamId
+        },
+        progress:
+        {
+          stagesCompleted: data.progress.stagesCompleted,
+          encountersPlayedByPlayer: data.progress.encountersPlayedByPlayer,
+          finalStageStatus: data.progress.finalStageStatus
+        },
+        completionOutcome: data.completionOutcome,
+        terminalReasonCode: data.terminalReasonCode        
+    }
+  }
+
+  async historyTeamsDetail(teamId: string, attemptId: string, lang: string) {
+    const team = await this.api.get<JourneyHistoryTeamsApi>(`/teams/${teamId}/journeys/${attemptId}/teams`, { lang });
+    return{
+      attemptId: team.attemptId,
+      teams: team.teams,
+      finalists: team.finalists
+    }
+  }
+
+  async historyEventsDetail(teamId: string, attemptId: string, lang: string) {
+    const event = await this.api.get<JourneyHistoryEventsApi>(`/teams/${teamId}/journeys/${attemptId}/events`, { lang })
+    return {
+      attemptId: event.attemptId,
+      language: event.language,
+      events: event.events.map((item) => ({
+        sequence: item.sequence,
+        eventCode: item.eventCode,
+        stageCode: item.stageCode,
+        encounterId: item.encounterId
+      })),
+    }
+  }
+
+  async historyStatistics(teamId: string, attemptId: string, lang: string) {
+    const statistic = await this.api.get<JourneyHistoryStatisticsApi>(`/teams/${teamId}/journeys/${attemptId}/statistics`, { lang })
+    return {
+      attemptId: statistic.attempId,
+      status: statistic.status,
+      completionOutcome: statistic.completionOutcome,
+      competition: statistic.competition
+    }
   }
 
   async currentJourney(teamId: string, lang: string) {

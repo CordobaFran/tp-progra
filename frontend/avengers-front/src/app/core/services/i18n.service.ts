@@ -113,6 +113,10 @@ export type AppCopyKey =
   | 'historyRivals.stage.roundOf16'
   | 'historyRivals.stage.quarterfinal'
   | 'historyRivals.stage.semifinal'
+  | 'historyRivals.journey'
+  | 'historyRivals.currentJourney'
+  | 'historyRivals.versus'
+  | 'historyRivals.winner'
   | 'teamConfig.caption'
   | 'teamConfig.title'
   | 'teamConfig.subtitle'
@@ -581,6 +585,10 @@ const DICTIONARY: Record<AppLanguage, Record<AppCopyKey, string>> = {
     'historyRivals.stage.roundOf16': 'ROUND OF 16',
     'historyRivals.stage.quarterfinal': 'QUARTERFINAL',
     'historyRivals.stage.semifinal': 'SEMIFINAL',
+    'historyRivals.journey': 'JOURNEY',
+    'historyRivals.currentJourney': 'Current Journey',
+    'historyRivals.versus': 'VS',
+    'historyRivals.winner': 'WINNER',
     'teamConfig.caption': 'TEAM CONFIGURATION',
     'teamConfig.title': 'TEAM CONFIGURATION',
     'teamConfig.subtitle': 'Configure formation and Combat Strategy.',
@@ -1048,6 +1056,10 @@ const DICTIONARY: Record<AppLanguage, Record<AppCopyKey, string>> = {
     'historyRivals.stage.roundOf16': 'OCTAVOS DE FINAL',
     'historyRivals.stage.quarterfinal': 'CUARTOS DE FINAL',
     'historyRivals.stage.semifinal': 'SEMIFINAL',
+    'historyRivals.journey': 'JOURNEY',
+    'historyRivals.currentJourney': 'Journey actual',
+    'historyRivals.versus': 'VS',
+    'historyRivals.winner': 'GANADOR',
     'teamConfig.caption': 'CONFIGURACIÓN DEL EQUIPO',
     'teamConfig.title': 'CONFIGURACIÓN DEL EQUIPO',
     'teamConfig.subtitle': 'Configura la formación y la estrategia de combate.',

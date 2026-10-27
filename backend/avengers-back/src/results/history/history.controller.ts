@@ -19,7 +19,7 @@ export class HistoryController extends AbstractController {
 
   @Get(':attemptId')
   async getHistoryDetail(
-    @Param('paramId') attemptId: string,
+    @Param('attemptId') attemptId: string,
     @Query('lang') lang: string = 'es'
   ){
     return this.createOkResponse(await this.historyService.getHistoryDetail(attemptId, lang));
