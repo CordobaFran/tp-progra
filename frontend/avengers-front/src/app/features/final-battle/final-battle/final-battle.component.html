@@ -1,4 +1,5 @@
 <main class="battle-page">
+  <!-- ENCABEZADO -->
   <header class="r9-header">
     <span class="caption-box">{{ translate('r9.caption') }}</span>
     <div class="r9-title-row">
@@ -7,6 +8,7 @@
     </div>
   </header>
 
+  <!-- ÁREA DE COMBATE -->
   <div class="battle-workspace">
     <app-loading-state *ngIf="vm.submitting" [message]="translate('loading')"></app-loading-state>
 
@@ -32,7 +34,7 @@
       aria-labelledby="arena-heading"
     >
       <div class="panel-heading-row">
-        <h2 class="panel-title">{{ translate('r9.arena') }}</h2>
+        <h2 class="panel-title" id="arena-heading">{{ translate('r9.arena') }}</h2>
       </div>
 
       <p class="ready-description">{{ translate('r9.chooseAction') }}</p>
@@ -55,7 +57,6 @@
         </div>
       </div>
 
-      <!-- GRILLA DE 3 COLUMNAS: JUGADOR | RIVAL | NARRATIVA -->
       <div class="battle-columns">
         <!-- COLUMNA 1: EQUIPO DEL JUGADOR -->
         <section
@@ -63,28 +64,32 @@
           aria-labelledby="player-team-heading"
           *ngIf="playerSide"
         >
-          <header
-            class="team-header"
-            style="display: flex; justify-content: space-between; align-items: center"
-          >
-            <h3 class="panel-title" id="player-team-heading">
-              {{ translate('r9.playerTeam') }}
-            </h3>
-            <span
-              *ngIf="currentStrategy"
-              style="
-                font-size: 0.85rem;
-                font-weight: 700;
-                color: #38bdf8;
-                text-transform: uppercase;
-              "
-            >
-              {{ translate('r9.strategy.' + currentStrategy) || currentStrategy }}
-            </span>
+          <header class="team-header-block">
+            <div class="team-header-title-row">
+              <h3 class="panel-title" id="player-team-heading">
+                {{ translate('r9.playerTeam') }}
+              </h3>
+              <span *ngIf="currentStrategy" class="strategy-badge">
+                {{ currentStrategy }}
+              </span>
+            </div>
+
+            <div class="header-action-bar">
+              <button
+                type="button"
+                class="button button-primary execute-btn"
+                [disabled]="!canExecute() || vm.submitting"
+                (click)="onExecute()"
+              >
+                {{ vm.submitting ? translate('r9.executing') : translate('r9.executeAction') }}
+              </button>
+              <button type="button" class="button button-danger abandon-btn" (click)="onAbandon()">
+                {{ translate('r9.abandon') }}
+              </button>
+            </div>
           </header>
 
           <div class="formations-row">
-            <!-- En Combate -->
             <div class="formation in-combat">
               <span class="formation-label">{{ translate('r9.inCombat') }}</span>
               <div class="hero-list">
@@ -127,7 +132,6 @@
               </div>
             </div>
 
-            <!-- Reserva Jugador -->
             <div
               class="formation reserve"
               *ngIf="playerSide.reserveHeroes && playerSide.reserveHeroes.length > 0"
@@ -159,14 +163,8 @@
             </div>
           </div>
 
-          <!-- Controles de Acciones -->
+          <!-- PANEL DE CONTROLES: HABILIDADES E INVENTARIO -->
           <section class="functional-panel player-controls" aria-labelledby="controls-heading">
-            <div class="panel-heading-row">
-              <h3 class="panel-title" id="controls-heading">
-                {{ translate('r9.legalActions') }}
-              </h3>
-            </div>
-
             <div class="tabs" role="tablist">
               <button
                 type="button"
@@ -188,7 +186,6 @@
               </button>
             </div>
 
-            <!-- Pestaña Habilidades -->
             <div class="action-panel" *ngIf="isAbilitiesTab">
               <p
                 *ngIf="!vm.selectedHeroId && availableActionCodes.length === 0"
@@ -215,7 +212,6 @@
               </div>
             </div>
 
-            <!-- Pestaña Inventario -->
             <div class="inventory" *ngIf="isInventoryTab">
               <div class="action-list" *ngIf="inventoryActionCodes.includes('TEAM_ACTION')">
                 <button
@@ -225,19 +221,12 @@
                   (click)="onSelectActionCode('TEAM_ACTION')"
                 >
                   <span class="action-label">
-                    {{
-                      getActionDescriptor('TEAM_ACTION')?.label ||
-                        translate('r9.action.TEAM_ACTION')
-                    }}
+                    {{ getActionDescriptor('TEAM_ACTION')?.label || 'TEAM_ACTION' }}
                   </span>
                 </button>
               </div>
 
-              <div
-                class="action-list"
-                style="margin-top: 0.5rem"
-                *ngIf="strategyActions.length > 0"
-              >
+              <div class="action-list strategy-list" *ngIf="strategyActions.length > 0">
                 <button
                   *ngFor="let action of strategyActions; trackBy: trackByActionId"
                   type="button"
@@ -261,44 +250,35 @@
               </div>
             </div>
 
-            <div class="target-choice" *ngIf="hasTeamTargetOption" style="margin-top: 1rem">
-              <button
-                type="button"
-                class="button button-secondary"
-                [class.selected]="isTeamTargetSelected"
-                (click)="onSelectTeamTarget()"
-                style="width: 100%; padding: 0.6rem; font-weight: 700"
-              >
-                {{ translate('r9.target') }}: {{ translate('r9.entireTeam') }}
-              </button>
-            </div>
-
-            <div class="action-footer-buttons">
-              <button
-                type="button"
-                class="button button-primary execute-btn"
-                [disabled]="!canExecute() || vm.submitting"
-                (click)="onExecute()"
-              >
-                {{ vm.submitting ? translate('r9.executing') : translate('r9.executeAction') }}
-              </button>
-              <button type="button" class="button button-danger abandon-btn" (click)="onAbandon()">
-                {{ translate('r9.abandon') }}
-              </button>
+            <!-- OBJETIVO DE ACCIÓN -->
+            <div class="target-selection-container" *ngIf="requiresTarget">
+              <div class="target-display">
+                <span class="target-title">{{ translate('r9.target') }}:</span>
+                <span class="target-chosen" [class.empty]="!currentTargetName">
+                  {{ currentTargetName }}
+                </span>
+              </div>
             </div>
           </section>
         </section>
 
-        <!-- COLUMNA 2: EQUIPO DEL RIVAL -->
+        <!-- COLUMNA 2: EQUIPO RIVAL -->
         <section
           class="team-column opponent-team"
           aria-labelledby="opponent-team-heading"
           *ngIf="opponentSide"
         >
-          <header class="team-header">
-            <h3 class="panel-title" id="opponent-team-heading">
-              {{ translate('r9.opponent') }}
-            </h3>
+          <header class="team-header-block">
+            <div class="team-header-title-row">
+              <h3 class="panel-title" id="opponent-team-heading">
+                {{ translate('r9.opponent') }}
+              </h3>
+              <span *ngIf="opponentStrategy" class="strategy-badge">
+                {{ opponentStrategy }}
+              </span>
+            </div>
+
+            <div class="header-spacer" aria-hidden="true"></div>
           </header>
 
           <div class="formations-row">
@@ -343,7 +323,6 @@
               </div>
             </div>
 
-            <!-- Reserva Rival -->
             <div
               class="formation reserve"
               *ngIf="opponentSide.reserveHeroes && opponentSide.reserveHeroes.length > 0"
@@ -370,6 +349,42 @@
                 </article>
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- COLUMNA 3: NARRATIVA -->
+        <section class="narrative-column" aria-labelledby="narrative-heading" *ngIf="narrativeView">
+          <header class="narrative-header">
+            <h3 class="panel-title" id="narrative-heading">
+              {{ translate('r9.narrative') }}
+            </h3>
+          </header>
+
+          <div class="narrative-log" #narrativeLog>
+            <ul class="event-feed" *ngIf="formattedNarrativeEvents.length > 0">
+              <ng-container
+                *ngFor="
+                  let ev of formattedNarrativeEvents;
+                  let i = index;
+                  trackBy: trackByEventIndex
+                "
+              >
+                <li
+                  *ngIf="i > 0 && ev.turn !== formattedNarrativeEvents[i - 1]?.turn"
+                  class="turn-divider"
+                  aria-hidden="true"
+                >
+                  <span class="divider-line"></span>
+                  <span class="divider-text">{{ translate('r9.turn') }} {{ ev.turn }}</span>
+                  <span class="divider-line"></span>
+                </li>
+
+                <li class="feed-item">
+                  <span class="feed-badge" *ngIf="ev.turn !== undefined"> T{{ ev.turn }} </span>
+                  <p class="feed-description">{{ ev.message }}</p>
+                </li>
+              </ng-container>
+            </ul>
           </div>
         </section>
       </div>

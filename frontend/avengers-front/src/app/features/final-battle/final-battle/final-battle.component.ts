@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewChecked, ViewChild, ElementRef } from '@angular/core';
 import { FinalBattleService, FinalNarrativeViewModel } from './service/final-battle.service';
-import { I18nService } from '../../../core/services/i18n.service';
+import { I18nService, AppCopyKey } from '../../../core/services/i18n.service';
 import {
   FinalBattleHero,
   FinalBattleLegalAction,
@@ -9,16 +9,20 @@ import {
 } from './model/final-battle.model';
 import { HeroArtworkResolverService } from 'src/app/core/services/hero-artwork-resolver.service';
 
-// Tipado extendido seguro para compilar sin errores mientras se actualiza el modelo compartido
-type SafeLegalAction = FinalBattleLegalAction & {
-  outgoingHeroId?: string;
-  incomingHeroId?: string;
-  target?: { targetId?: string; targetType?: 'HERO' | 'TEAM' } | null;
-};
+export interface FormattedNarrativeEvent {
+  turn?: number;
+  message: string;
+}
 
-type SafeSide = FinalBattleSide & {
-  strategyCode?: string;
-};
+interface RawNarrativeEvent {
+  turn?: number;
+  message?: string;
+  text?: string;
+  messageCode?: string;
+  narrative?: {
+    lines?: Array<{ text?: string }>;
+  };
+}
 
 @Component({
   selector: 'app-final-battle',
@@ -26,7 +30,12 @@ type SafeSide = FinalBattleSide & {
   styleUrls: ['./final-battle.component.css'],
   standalone: false,
 })
-export class FinalBattleComponent implements OnInit {
+export class FinalBattleComponent implements OnInit, AfterViewChecked {
+  @ViewChild('narrativeLog')
+  private readonly narrativeLogContainer?: ElementRef<HTMLDivElement>;
+
+  private previousEventsCount = 0;
+
   constructor(
     private readonly finalBattleService: FinalBattleService,
     private readonly i18nService: I18nService,
@@ -35,6 +44,14 @@ export class FinalBattleComponent implements OnInit {
 
   ngOnInit(): void {
     this.finalBattleService.initialize();
+  }
+
+  ngAfterViewChecked(): void {
+    const currentCount = this.formattedNarrativeEvents.length;
+    if (currentCount > this.previousEventsCount) {
+      this.previousEventsCount = currentCount;
+      this.scrollToBottom();
+    }
   }
 
   get vm(): FinalBattleViewModel {
@@ -49,12 +66,12 @@ export class FinalBattleComponent implements OnInit {
     return this.finalBattleService.getNarrative();
   }
 
-  get playerSide(): SafeSide | null {
-    return (this.vm.data?.teams?.player as SafeSide) ?? null;
+  get playerSide(): FinalBattleSide | null {
+    return this.vm.data?.teams?.player ?? null;
   }
 
-  get opponentSide(): SafeSide | null {
-    return (this.vm.data?.teams?.opponent as SafeSide) ?? null;
+  get opponentSide(): FinalBattleSide | null {
+    return this.vm.data?.teams?.opponent ?? null;
   }
 
   get currentTurn(): number {
@@ -66,7 +83,33 @@ export class FinalBattleComponent implements OnInit {
   }
 
   get currentStrategy(): string {
-    return this.playerSide?.strategyCode ?? '';
+    return this.vm.data?.teams?.player?.strategyCode || this.playerSide?.strategyCode || 'BALANCED';
+  }
+
+  get formattedNarrativeEvents(): FormattedNarrativeEvent[] {
+    const rawEvents: readonly RawNarrativeEvent[] =
+      (this.vm.data?.events as RawNarrativeEvent[] | undefined) ?? [];
+
+    let maxTurn = 1;
+
+    return rawEvents
+      .map((evt: RawNarrativeEvent): FormattedNarrativeEvent => {
+        const textFromLines = evt.narrative?.lines?.[0]?.text;
+        const directMessage = evt.message || evt.text;
+        const translatedMsg = evt.messageCode ? this.translate(evt.messageCode) : '';
+        const message = textFromLines || directMessage || translatedMsg || '';
+
+        const rawTurn = evt.turn ?? maxTurn;
+        if (rawTurn > maxTurn) {
+          maxTurn = rawTurn;
+        }
+
+        return {
+          turn: maxTurn,
+          message,
+        };
+      })
+      .filter((e: FormattedNarrativeEvent) => Boolean(e.message));
   }
 
   get isAbilitiesTab(): boolean {
@@ -78,7 +121,7 @@ export class FinalBattleComponent implements OnInit {
   }
 
   get availableActionCodes(): string[] {
-    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
+    const actions: FinalBattleLegalAction[] = this.vm.data?.actions ?? [];
     if (!this.isAbilitiesTab) {
       return [];
     }
@@ -103,19 +146,19 @@ export class FinalBattleComponent implements OnInit {
   }
 
   get inventoryActionCodes(): string[] {
-    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
+    const actions: FinalBattleLegalAction[] = this.vm.data?.actions ?? [];
     return Array.from(
       new Set(actions.filter((a) => a.actionCode === 'TEAM_ACTION').map((a) => a.actionCode)),
     );
   }
 
-  get strategyActions(): SafeLegalAction[] {
-    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
+  get strategyActions(): FinalBattleLegalAction[] {
+    const actions: FinalBattleLegalAction[] = this.vm.data?.actions ?? [];
     return actions.filter((a) => a.actionCode === 'CHANGE_STRATEGY');
   }
 
-  getActionDescriptor(actionCode: string): SafeLegalAction | undefined {
-    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
+  getActionDescriptor(actionCode: string): FinalBattleLegalAction | undefined {
+    const actions: FinalBattleLegalAction[] = this.vm.data?.actions ?? [];
     if (actionCode === 'SWAP') {
       return actions.find((a) => a.actionCode === 'SWAP');
     }
@@ -127,8 +170,8 @@ export class FinalBattleComponent implements OnInit {
     return actions.find((a) => a.actionCode === actionCode);
   }
 
-  get legalTargetsForSelectedAction(): SafeLegalAction[] {
-    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
+  get legalTargetsForSelectedAction(): FinalBattleLegalAction[] {
+    const actions: FinalBattleLegalAction[] = this.vm.data?.actions ?? [];
     if (!this.vm.actionCode) {
       return [];
     }
@@ -155,81 +198,137 @@ export class FinalBattleComponent implements OnInit {
 
   isLegalTarget(heroId: string): boolean {
     return this.legalTargetsForSelectedAction.some((a) => {
-      if (a.actionCode === 'SWAP') {
-        return a.incomingHeroId === heroId || a.targetHeroId === heroId;
-      }
-      return a.targetHeroId === heroId || a.target?.targetId === heroId;
+      return a.targetHeroId === heroId || a.incomingHeroId === heroId;
     });
   }
 
-  get hasTeamTargetOption(): boolean {
+  get isTeamActionSelected(): boolean {
     if (!this.vm.actionCode) {
       return false;
     }
-    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
+    if (this.vm.actionCode === 'TEAM_ACTION') {
+      return true;
+    }
 
-    return actions.some((a) => {
-      const matchHero = this.isAbilitiesTab ? a.actorHeroId === this.vm.selectedHeroId : true;
-      return (
-        matchHero &&
-        a.actionCode === this.vm.actionCode &&
-        (a.targetScope === 'TEAM' || a.target?.targetType === 'TEAM')
-      );
-    });
+    const actionDesc = this.getActionDescriptor(this.vm.actionCode);
+    if (actionDesc?.targetScope === 'TEAM') {
+      return true;
+    }
+
+    const sel = this.selectedAction;
+    return sel?.targetScope === 'TEAM';
   }
 
-  get isTeamTargetSelected(): boolean {
-    const sel = this.selectedAction as SafeLegalAction | null;
-    return sel?.targetScope === 'TEAM' || sel?.target?.targetType === 'TEAM';
+  get requiresTarget(): boolean {
+    if (!this.vm.actionCode) {
+      return false;
+    }
+    return this.vm.actionCode !== 'CHANGE_STRATEGY';
   }
 
-  get selectedAction(): SafeLegalAction | null {
-    return (this.finalBattleService.selectedAction() as SafeLegalAction) ?? null;
+  get selectedAction(): FinalBattleLegalAction | null {
+    return this.finalBattleService.selectedAction();
+  }
+
+  get currentTargetName(): string {
+    if (!this.requiresTarget) {
+      return '';
+    }
+
+    if (this.isTeamActionSelected) {
+      return this.translate('r9.opponent');
+    }
+
+    const sel = this.selectedAction;
+    if (!sel) {
+      return '';
+    }
+
+    if (sel.actionCode === 'SWAP') {
+      const targetId = sel.incomingHeroId || sel.targetHeroId;
+      const hero = this.playerSide?.reserveHeroes.find((h) => h.id === targetId);
+      return hero?.displayName || targetId || '';
+    }
+
+    const targetId = sel.targetHeroId;
+    if (targetId) {
+      const hero = this.opponentSide?.activeHeroes.find((h) => h.id === targetId);
+      return hero?.displayName || targetId;
+    }
+
+    return '';
+  }
+
+  get opponentStrategy(): string {
+    return this.opponentSide?.strategyCode || '';
   }
 
   isReserveSelected(heroId: string): boolean {
     const sel = this.selectedAction;
-    return (
-      sel?.actionCode === 'SWAP' && (sel.incomingHeroId === heroId || sel.targetHeroId === heroId)
+    return Boolean(
+      sel?.actionCode === 'SWAP' && (sel.incomingHeroId === heroId || sel.targetHeroId === heroId),
     );
   }
 
   isHeroTargetSelected(heroId: string): boolean {
+    if (this.isTeamActionSelected) {
+      return true;
+    }
     const sel = this.selectedAction;
-    return sel?.targetHeroId === heroId || sel?.target?.targetId === heroId;
+    return sel?.targetHeroId === heroId;
   }
 
   canExecute(): boolean {
-    return this.finalBattleService.canExecute();
-  }
+    if (!this.vm.data || this.vm.submitting) {
+      return false;
+    }
 
-  onSelectHero(hero: FinalBattleHero): void {
-    if (hero.isKnockedOut) {
-      return;
+    if (this.selectedAction?.actionCode === 'CHANGE_STRATEGY') {
+      return true;
     }
-    const wasSwap = this.vm.actionCode === 'SWAP';
-    this.finalBattleService.selectHero(hero.id);
-    if (wasSwap) {
-      this.finalBattleService.setActionCode('SWAP');
+
+    if (this.vm.actionCode === 'TEAM_ACTION' || this.selectedAction?.targetScope === 'TEAM') {
+      return Boolean(this.vm.selectedActionId);
     }
+
+    return Boolean(this.vm.selectedActionId);
   }
 
   onSelectTab(tab: 'abilities' | 'inventory'): void {
     this.finalBattleService.setTab(tab);
   }
 
-  onSelectActionCode(actionCode: string): void {
-    this.finalBattleService.setActionCode(actionCode);
+  onSelectHero(hero: FinalBattleHero): void {
+    this.finalBattleService.selectHero(hero.id);
+  }
 
-    const targets = this.legalTargetsForSelectedAction;
-    if (targets.length === 1 && !targets[0].targetHeroId && !targets[0].incomingHeroId) {
-      this.finalBattleService.selectTarget(targets[0].actionId);
+  onSelectActionCode(code: string): void {
+    this.finalBattleService.setActionCode(code);
+
+    const actionDesc = this.getActionDescriptor(code);
+    const isTeamScope = code === 'TEAM_ACTION' || actionDesc?.targetScope === 'TEAM';
+
+    if (isTeamScope) {
+      const actions: FinalBattleLegalAction[] = this.vm.data?.actions ?? [];
+      const teamAction = actions.find((a: FinalBattleLegalAction) => {
+        if (code === 'TEAM_ACTION') {
+          return a.actionCode === 'TEAM_ACTION' || a.targetScope === 'TEAM';
+        }
+        return (
+          a.actionCode === code &&
+          (!this.vm.selectedHeroId || a.actorHeroId === this.vm.selectedHeroId)
+        );
+      });
+
+      if (teamAction) {
+        this.finalBattleService.selectTarget(teamAction.actionId);
+      }
     }
   }
 
   onSelectHeroTarget(heroId: string): void {
     const matchingAction = this.legalTargetsForSelectedAction.find((a) => {
-      return a.targetHeroId === heroId || a.target?.targetId === heroId;
+      return a.targetHeroId === heroId;
     });
     if (matchingAction) {
       this.finalBattleService.selectTarget(matchingAction.actionId);
@@ -237,7 +336,7 @@ export class FinalBattleComponent implements OnInit {
   }
 
   onSelectReserveTarget(reserveHeroId: string): void {
-    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
+    const actions: FinalBattleLegalAction[] = this.vm.data?.actions ?? [];
     const activeHeroId = this.vm.selectedHeroId || this.playerSide?.activeHeroes[0]?.id;
 
     let swapAction = actions.find(
@@ -261,23 +360,7 @@ export class FinalBattleComponent implements OnInit {
     }
   }
 
-  onSelectTeamTarget(): void {
-    const actions = (this.vm.data?.actions ?? []) as SafeLegalAction[];
-    const teamAction = actions.find((a) => {
-      const matchHero = this.isAbilitiesTab ? a.actorHeroId === this.vm.selectedHeroId : true;
-      return (
-        matchHero &&
-        a.actionCode === this.vm.actionCode &&
-        (a.targetScope === 'TEAM' || a.target?.targetType === 'TEAM')
-      );
-    });
-
-    if (teamAction) {
-      this.finalBattleService.selectTarget(teamAction.actionId);
-    }
-  }
-
-  onSelectStrategyAction(action: SafeLegalAction): void {
+  onSelectStrategyAction(action: FinalBattleLegalAction): void {
     this.finalBattleService.setActionCode(action.actionCode);
     this.finalBattleService.selectTarget(action.actionId);
   }
@@ -299,7 +382,7 @@ export class FinalBattleComponent implements OnInit {
   }
 
   translate(key: string): string {
-    return this.i18nService.t(key as any);
+    return this.i18nService.t(key as AppCopyKey);
   }
 
   trackByHeroId(_index: number, hero: FinalBattleHero): string {
@@ -310,7 +393,7 @@ export class FinalBattleComponent implements OnInit {
     return code;
   }
 
-  trackByActionId(_index: number, action: SafeLegalAction): string {
+  trackByActionId(_index: number, action: FinalBattleLegalAction): string {
     return action.actionId;
   }
 
@@ -328,5 +411,15 @@ export class FinalBattleComponent implements OnInit {
 
   imageError(event: Event): void {
     this.artwork.useFallback(event);
+  }
+
+  private scrollToBottom(): void {
+    if (this.narrativeLogContainer?.nativeElement) {
+      const el = this.narrativeLogContainer.nativeElement;
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   }
 }

@@ -367,6 +367,7 @@ export type AppCopyKey =
   | 'r9.ap'
   | 'r9.apFull'
   | 'r9.abandon'
+  | 'r9.narrative'
   | 'r10.refresh'
   | 'r10.status'
   | 'r10.ready'
@@ -834,6 +835,7 @@ const DICTIONARY: Record<AppLanguage, Record<AppCopyKey, string>> = {
     'r9.ap': 'AP',
     'r9.apFull': 'ABILITY POINTS',
     'r9.abandon': 'ABANDON',
+    'r9.narrative': 'NARRATIVE',
     'r10.refresh': 'Refresh',
     'r10.status': 'Status',
     'r10.ready': 'Ready to start',
@@ -1303,6 +1305,7 @@ const DICTIONARY: Record<AppLanguage, Record<AppCopyKey, string>> = {
     'r9.ap': 'PA',
     'r9.apFull': 'PUNTOS DE HABILIDAD',
     'r9.abandon': 'ABANDONAR',
+    'r9.narrative': 'NARRATIVA',
     'r10.refresh': 'Actualizar',
     'r10.status': 'Estado',
     'r10.ready': 'Lista para iniciar',
