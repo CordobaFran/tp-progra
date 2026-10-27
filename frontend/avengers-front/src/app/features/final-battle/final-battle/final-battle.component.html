@@ -9,27 +9,40 @@
   </header>
 
   <!-- ÁREA DE COMBATE -->
-  <div class="battle-workspace">
-    <app-loading-state *ngIf="vm.submitting" [message]="translate('loading')"></app-loading-state>
-
+  <div class="battle-workspace" [attr.aria-busy]="vm.loading || vm.submitting">
+    <button
+      type="button"
+      class="button button-secondary"
+      [disabled]="vm.loading || vm.submitting"
+      (click)="onRefresh()"
+    >
+      {{ translate('r9.refresh') }}
+    </button>
+    <app-error-state
+      *ngIf="vm.operationError"
+      [message]="vm.operationError"
+      [messageCode]="vm.operationErrorCode"
+    >
+    </app-error-state>
+    <app-loading-state
+      *ngIf="vm.loading || vm.submitting"
+      [message]="translate('loading')"
+    ></app-loading-state>
     <ng-container *ngIf="status === 'ERROR'">
       <app-error-state
         [message]="vm.error ?? translate('error')"
         [messageCode]="vm.errorCode ?? null"
       ></app-error-state>
-
-      <button type="button" class="button button-secondary retry-button" (click)="onRefresh()">
-        {{ translate('retry') }}
-      </button>
     </ng-container>
-
     <app-empty-state
-      *ngIf="status === 'EMPTY'"
+      *ngIf="status === 'EMPTY' && !vm.loading"
       [message]="translate('r9.noBattleCopy')"
     ></app-empty-state>
-
+    <a *ngIf="status === 'EMPTY' && !vm.loading" routerLink="/journey/simulate">
+      {{ translate('r10.simulateLink') }}
+    </a>
     <section
-      *ngIf="status === 'READY'"
+      *ngIf="status === 'READY' && !vm.loading"
       class="functional-panel battle-ready-panel"
       aria-labelledby="arena-heading"
     >
@@ -42,18 +55,25 @@
       <button
         type="button"
         class="button button-primary start"
-        [disabled]="vm.submitting"
+        [disabled]="vm.loading || vm.submitting || vm.needsRefresh"
         (click)="onStart()"
       >
         {{ vm.submitting ? translate('r9.starting') : translate('r9.start') }}
       </button>
     </section>
-
-    <section *ngIf="vm.status === 'ACTIVE'" class="functional-panel final-battle-panel">
+    <section *ngIf="status === 'COMPLETED'" class="functional-panel" aria-live="polite">
+      <h2>{{ translate('r9.completed') }}</h2>
+      <p>{{ translate('r9.result') }}: {{ completionLabel }}</p>
+    </section>
+    <section
+      *ngIf="vm.status === 'ACTIVE' || vm.status === 'COMPLETED'"
+      class="functional-panel final-battle-panel"
+    >
       <div class="panel-heading-row">
         <h2 class="panel-title">{{ translate('r9.arena') }}</h2>
-        <div class="turn-indicator" *ngIf="currentTurn > 0">
+        <div class="turn-indicator">
           <span>{{ translate('r9.turn') }}: {{ currentTurn }}</span>
+          <span>{{ translate('r9.phase') }}: {{ currentPhase }}</span>
         </div>
       </div>
 
@@ -83,7 +103,12 @@
               >
                 {{ vm.submitting ? translate('r9.executing') : translate('r9.executeAction') }}
               </button>
-              <button type="button" class="button button-danger abandon-btn" (click)="onAbandon()">
+              <button
+                type="button"
+                class="button button-danger abandon-btn"
+                [disabled]="vm.loading || vm.submitting || vm.needsRefresh || status !== 'ACTIVE'"
+                (click)="onAbandon()"
+              >
                 {{ translate('r9.abandon') }}
               </button>
             </div>
@@ -144,7 +169,6 @@
                   [class.knocked-out]="hero.isKnockedOut"
                   [class.legal-target]="vm.actionCode === 'SWAP' && isLegalTarget(hero.id)"
                   [class.selected]="isReserveSelected(hero.id)"
-                  (click)="onSelectReserveTarget(hero.id)"
                 >
                   <div class="portrait-cell">
                     <img
@@ -199,6 +223,7 @@
                   *ngFor="let code of availableActionCodes; trackBy: trackByActionCode"
                   type="button"
                   class="action-choice"
+                  [disabled]="vm.loading || vm.submitting || vm.needsRefresh || status !== 'ACTIVE'"
                   [class.selected]="vm.actionCode === code"
                   (click)="onSelectActionCode(code)"
                 >
@@ -213,16 +238,16 @@
             </div>
 
             <div class="inventory" *ngIf="isInventoryTab">
-              <div class="action-list" *ngIf="inventoryActionCodes.includes('TEAM_ACTION')">
+              <div class="action-list">
                 <button
+                  *ngFor="let code of inventoryActionCodes; trackBy: trackByActionCode"
                   type="button"
                   class="action-choice"
-                  [class.selected]="vm.actionCode === 'TEAM_ACTION'"
-                  (click)="onSelectActionCode('TEAM_ACTION')"
+                  [disabled]="vm.loading || vm.submitting || vm.needsRefresh || status !== 'ACTIVE'"
+                  [class.selected]="vm.actionCode === code"
+                  (click)="onSelectActionCode(code)"
                 >
-                  <span class="action-label">
-                    {{ getActionDescriptor('TEAM_ACTION')?.label || 'TEAM_ACTION' }}
-                  </span>
+                  {{ getActionDescriptor(code)?.label || code }}
                 </button>
               </div>
 
@@ -231,6 +256,7 @@
                   *ngFor="let action of strategyActions; trackBy: trackByActionId"
                   type="button"
                   class="action-choice"
+                  [disabled]="vm.loading || vm.submitting || vm.needsRefresh || status !== 'ACTIVE'"
                   [class.selected]="selectedAction?.actionId === action.actionId"
                   (click)="onSelectStrategyAction(action)"
                 >
@@ -241,13 +267,28 @@
               </div>
 
               <div
-                *ngIf="
-                  !inventoryActionCodes.includes('TEAM_ACTION') && strategyActions.length === 0
-                "
+                *ngIf="inventoryActionCodes.length === 0 && strategyActions.length === 0"
                 class="panel-prompt"
               >
                 {{ translate('r9.noInventory') }}
               </div>
+            </div>
+            <div
+              class="action-list"
+              *ngIf="vm.actionCode && legalTargetsForSelectedAction.length > 0"
+            >
+              <button
+                *ngFor="let action of legalTargetsForSelectedAction; trackBy: trackByActionId"
+                type="button"
+                class="action-choice"
+                [disabled]="vm.loading || vm.submitting || vm.needsRefresh || status !== 'ACTIVE'"
+                [class.selected]="vm.selectedActionId === action.actionId"
+                (click)="onSelectLegalAction(action)"
+              >
+                <span>{{ action.label }} {{ itemName(action) }}</span>
+                <span>{{ translate('r9.target') }}: {{ actionTargetName(action) }}</span>
+                <span>{{ translate('r9.cost') }}: {{ action.apCost ?? 0 }}</span>
+              </button>
             </div>
 
             <!-- OBJETIVO DE ACCIÓN -->
@@ -280,6 +321,11 @@
 
             <div class="header-spacer" aria-hidden="true"></div>
           </header>
+
+          <article *ngIf="doom as boss" class="functional-panel">
+            <h3>Doctor Doom</h3>
+            <p>{{ translate('r9.energy') }}: {{ boss.currentEnergy }}/{{ boss.maximumEnergy }}</p>
+          </article>
 
           <div class="formations-row">
             <div class="formation in-combat">
@@ -351,40 +397,10 @@
             </div>
           </div>
         </section>
-
-        <!-- COLUMNA 3: NARRATIVA -->
-        <section class="narrative-column" aria-labelledby="narrative-heading" *ngIf="narrativeView">
-          <header class="narrative-header">
-            <h3 class="panel-title" id="narrative-heading">
-              {{ translate('r9.narrative') }}
-            </h3>
-          </header>
-
+        <section class="narrative-column">
           <div class="narrative-log" #narrativeLog>
-            <ul class="event-feed" *ngIf="formattedNarrativeEvents.length > 0">
-              <ng-container
-                *ngFor="
-                  let ev of formattedNarrativeEvents;
-                  let i = index;
-                  trackBy: trackByEventIndex
-                "
-              >
-                <li
-                  *ngIf="i > 0 && ev.turn !== formattedNarrativeEvents[i - 1]?.turn"
-                  class="turn-divider"
-                  aria-hidden="true"
-                >
-                  <span class="divider-line"></span>
-                  <span class="divider-text">{{ translate('r9.turn') }} {{ ev.turn }}</span>
-                  <span class="divider-line"></span>
-                </li>
-
-                <li class="feed-item">
-                  <span class="feed-badge" *ngIf="ev.turn !== undefined"> T{{ ev.turn }} </span>
-                  <p class="feed-description">{{ ev.message }}</p>
-                </li>
-              </ng-container>
-            </ul>
+            <app-final-narrative [view]="narrativeView" (retry)="onRefresh()">
+            </app-final-narrative>
           </div>
         </section>
       </div>

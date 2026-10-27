@@ -9,21 +9,6 @@ import {
 } from './model/final-battle.model';
 import { HeroArtworkResolverService } from 'src/app/core/services/hero-artwork-resolver.service';
 
-export interface FormattedNarrativeEvent {
-  turn?: number;
-  message: string;
-}
-
-interface RawNarrativeEvent {
-  turn?: number;
-  message?: string;
-  text?: string;
-  messageCode?: string;
-  narrative?: {
-    lines?: Array<{ text?: string }>;
-  };
-}
-
 @Component({
   selector: 'app-final-battle',
   templateUrl: './final-battle.component.html',
@@ -47,7 +32,7 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
   }
 
   ngAfterViewChecked(): void {
-    const currentCount = this.formattedNarrativeEvents.length;
+    const currentCount = this.vm.data?.events?.length ?? 0;
     if (currentCount > this.previousEventsCount) {
       this.previousEventsCount = currentCount;
       this.scrollToBottom();
@@ -75,41 +60,15 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
   }
 
   get currentTurn(): number {
-    return this.vm.data?.state?.turn ?? 0;
+    return this.vm.data?.state?.normalTurn ?? 0;
   }
 
   get currentPhase(): string {
-    return this.vm.data?.state?.phase ?? '';
+    return this.vm.data?.state?.phaseLabel ?? '';
   }
 
   get currentStrategy(): string {
     return this.vm.data?.teams?.player?.strategyCode || this.playerSide?.strategyCode || 'BALANCED';
-  }
-
-  get formattedNarrativeEvents(): FormattedNarrativeEvent[] {
-    const rawEvents: readonly RawNarrativeEvent[] =
-      (this.vm.data?.events as RawNarrativeEvent[] | undefined) ?? [];
-
-    let maxTurn = 1;
-
-    return rawEvents
-      .map((evt: RawNarrativeEvent): FormattedNarrativeEvent => {
-        const textFromLines = evt.narrative?.lines?.[0]?.text;
-        const directMessage = evt.message || evt.text;
-        const translatedMsg = evt.messageCode ? this.translate(evt.messageCode) : '';
-        const message = textFromLines || directMessage || translatedMsg || '';
-
-        const rawTurn = evt.turn ?? maxTurn;
-        if (rawTurn > maxTurn) {
-          maxTurn = rawTurn;
-        }
-
-        return {
-          turn: maxTurn,
-          message,
-        };
-      })
-      .filter((e: FormattedNarrativeEvent) => Boolean(e.message));
   }
 
   get isAbilitiesTab(): boolean {
@@ -146,10 +105,13 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
   }
 
   get inventoryActionCodes(): string[] {
-    const actions: FinalBattleLegalAction[] = this.vm.data?.actions ?? [];
-    return Array.from(
-      new Set(actions.filter((a) => a.actionCode === 'TEAM_ACTION').map((a) => a.actionCode)),
-    );
+    return [
+      ...new Set(
+        (this.vm.data?.actions ?? [])
+          .filter((action) => ['TEAM_ACTION', 'POWER_UP'].includes(action.actionCode))
+          .map((action) => action.actionCode),
+      ),
+    ];
   }
 
   get strategyActions(): FinalBattleLegalAction[] {
@@ -171,52 +133,30 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
   }
 
   get legalTargetsForSelectedAction(): FinalBattleLegalAction[] {
-    const actions: FinalBattleLegalAction[] = this.vm.data?.actions ?? [];
-    if (!this.vm.actionCode) {
-      return [];
-    }
-
+    const actions = (this.vm.data?.actions ?? []).filter(
+      (action) => action.actionCode === this.vm.actionCode,
+    );
     if (this.vm.actionCode === 'SWAP') {
-      const activeId = this.vm.selectedHeroId || this.playerSide?.activeHeroes[0]?.id;
-      return actions.filter(
-        (a) => a.actionCode === 'SWAP' && (!activeId || a.outgoingHeroId === activeId),
-      );
+      const selected = actions.filter((action) => action.outgoingHeroId === this.vm.selectedHeroId);
+      return selected.length ? selected : actions;
     }
-
-    if (this.vm.actionCode === 'TEAM_ACTION') {
-      return actions.filter((a) => a.actionCode === 'TEAM_ACTION');
+    if (this.isInventoryTab) {
+      return actions;
     }
-
-    if (this.isAbilitiesTab && this.vm.selectedHeroId) {
-      return actions.filter(
-        (a) => a.actorHeroId === this.vm.selectedHeroId && a.actionCode === this.vm.actionCode,
-      );
-    }
-
-    return [];
+    return actions.filter((action) => action.actorHeroId === this.vm.selectedHeroId);
   }
 
   isLegalTarget(heroId: string): boolean {
-    return this.legalTargetsForSelectedAction.some((a) => {
-      return a.targetHeroId === heroId || a.incomingHeroId === heroId;
-    });
+    return this.legalTargetsForSelectedAction.some(
+      (action) =>
+        action.targetSide === 'OPPONENT' &&
+        action.targetScope === 'HERO' &&
+        action.targetHeroId === heroId,
+    );
   }
 
   get isTeamActionSelected(): boolean {
-    if (!this.vm.actionCode) {
-      return false;
-    }
-    if (this.vm.actionCode === 'TEAM_ACTION') {
-      return true;
-    }
-
-    const actionDesc = this.getActionDescriptor(this.vm.actionCode);
-    if (actionDesc?.targetScope === 'TEAM') {
-      return true;
-    }
-
-    const sel = this.selectedAction;
-    return sel?.targetScope === 'TEAM';
+    return this.selectedAction?.targetScope === 'TEAM';
   }
 
   get requiresTarget(): boolean {
@@ -231,32 +171,61 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
   }
 
   get currentTargetName(): string {
-    if (!this.requiresTarget) {
-      return '';
-    }
+    return this.selectedAction ? this.actionTargetName(this.selectedAction) : '';
+  }
 
-    if (this.isTeamActionSelected) {
-      return this.translate('r9.opponent');
-    }
+  get doom() {
+    return this.vm.data?.state?.doom ?? this.vm.data?.teams?.doom;
+  }
 
-    const sel = this.selectedAction;
-    if (!sel) {
-      return '';
-    }
+  get completionLabel(): string {
+    const outcome = this.vm.data?.state?.completion?.outcomeCode;
+    return outcome === 'VICTORY'
+      ? this.translate('r6.victory')
+      : outcome === 'DEFEAT'
+        ? this.translate('r6.defeat')
+        : outcome === 'ABANDON'
+          ? this.translate('r6.abandon')
+          : '';
+  }
 
-    if (sel.actionCode === 'SWAP') {
-      const targetId = sel.incomingHeroId || sel.targetHeroId;
-      const hero = this.playerSide?.reserveHeroes.find((h) => h.id === targetId);
-      return hero?.displayName || targetId || '';
+  actionTargetName(action: FinalBattleLegalAction): string {
+    const heroes = [
+      ...(this.playerSide?.activeHeroes ?? []),
+      ...(this.playerSide?.reserveHeroes ?? []),
+    ];
+    const name = (id?: string) => heroes.find((h) => h.id === id)?.displayName ?? id ?? '';
+    if (action.actionCode === 'SWAP') {
+      return `${name(action.outgoingHeroId)} -> ${name(action.incomingHeroId)}`;
     }
-
-    const targetId = sel.targetHeroId;
-    if (targetId) {
-      const hero = this.opponentSide?.activeHeroes.find((h) => h.id === targetId);
-      return hero?.displayName || targetId;
+    if (action.targetScope === 'ANTAGONIST') {
+      return 'Doctor Doom';
     }
+    if (action.targetScope === 'TEAM') {
+      return this.translate(action.targetSide === 'PLAYER' ? 'r9.playerTeam' : 'r9.opponent');
+    }
+    const side = action.targetSide === 'PLAYER' ? this.playerSide : this.opponentSide;
+    return (
+      [...(side?.activeHeroes ?? []), ...(side?.reserveHeroes ?? [])].find(
+        (hero) => hero.id === action.targetHeroId,
+      )?.displayName ??
+      action.targetHeroId ??
+      this.translate('r9.noTarget')
+    );
+  }
 
-    return '';
+  itemName(action: FinalBattleLegalAction): string {
+    return (
+      this.vm.data?.inventory?.find((item) => item.itemId === action.itemId)?.definition.name ??
+      action.itemId ??
+      ''
+    );
+  }
+
+  onSelectLegalAction(action: FinalBattleLegalAction): void {
+    if (this.legalTargetsForSelectedAction.some((entry) => entry.actionId === action.actionId)) {
+      this.finalBattleService.selectTarget(action.actionId);
+    }
   }
 
   get opponentStrategy(): string {
@@ -271,27 +240,15 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
   }
 
   isHeroTargetSelected(heroId: string): boolean {
-    if (this.isTeamActionSelected) {
-      return true;
-    }
-    const sel = this.selectedAction;
-    return sel?.targetHeroId === heroId;
+    const action = this.selectedAction;
+    return (
+      action?.targetSide === 'OPPONENT' &&
+      (action.targetScope === 'TEAM' || action.targetHeroId === heroId)
+    );
   }
 
   canExecute(): boolean {
-    if (!this.vm.data || this.vm.submitting) {
-      return false;
-    }
-
-    if (this.selectedAction?.actionCode === 'CHANGE_STRATEGY') {
-      return true;
-    }
-
-    if (this.vm.actionCode === 'TEAM_ACTION' || this.selectedAction?.targetScope === 'TEAM') {
-      return Boolean(this.vm.selectedActionId);
-    }
-
-    return Boolean(this.vm.selectedActionId);
+    return this.finalBattleService.canExecute();
   }
 
   onSelectTab(tab: 'abilities' | 'inventory'): void {
@@ -304,59 +261,34 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
 
   onSelectActionCode(code: string): void {
     this.finalBattleService.setActionCode(code);
-
-    const actionDesc = this.getActionDescriptor(code);
-    const isTeamScope = code === 'TEAM_ACTION' || actionDesc?.targetScope === 'TEAM';
-
-    if (isTeamScope) {
-      const actions: FinalBattleLegalAction[] = this.vm.data?.actions ?? [];
-      const teamAction = actions.find((a: FinalBattleLegalAction) => {
-        if (code === 'TEAM_ACTION') {
-          return a.actionCode === 'TEAM_ACTION' || a.targetScope === 'TEAM';
-        }
-        return (
-          a.actionCode === code &&
-          (!this.vm.selectedHeroId || a.actorHeroId === this.vm.selectedHeroId)
-        );
-      });
-
-      if (teamAction) {
-        this.finalBattleService.selectTarget(teamAction.actionId);
-      }
+    const options = this.legalTargetsForSelectedAction;
+    if (options.length === 1) {
+      this.finalBattleService.selectTarget(options[0].actionId);
     }
   }
 
   onSelectHeroTarget(heroId: string): void {
-    const matchingAction = this.legalTargetsForSelectedAction.find((a) => {
-      return a.targetHeroId === heroId;
-    });
-    if (matchingAction) {
-      this.finalBattleService.selectTarget(matchingAction.actionId);
+    const action = this.legalTargetsForSelectedAction.find(
+      (entry) =>
+        entry.targetSide === 'OPPONENT' &&
+        entry.targetScope === 'HERO' &&
+        entry.targetHeroId === heroId,
+    );
+    if (action) {
+      this.finalBattleService.selectTarget(action.actionId);
     }
   }
 
   onSelectReserveTarget(reserveHeroId: string): void {
-    const actions: FinalBattleLegalAction[] = this.vm.data?.actions ?? [];
-    const activeHeroId = this.vm.selectedHeroId || this.playerSide?.activeHeroes[0]?.id;
-
-    let swapAction = actions.find(
-      (a) =>
-        a.actionCode === 'SWAP' &&
-        a.outgoingHeroId === activeHeroId &&
-        (a.incomingHeroId === reserveHeroId || a.targetHeroId === reserveHeroId),
+    const action = (this.vm.data?.actions ?? []).find(
+      (entry) =>
+        entry.actionCode === 'SWAP' &&
+        entry.outgoingHeroId === this.vm.selectedHeroId &&
+        entry.incomingHeroId === reserveHeroId,
     );
-
-    if (!swapAction) {
-      swapAction = actions.find(
-        (a) =>
-          a.actionCode === 'SWAP' &&
-          (a.incomingHeroId === reserveHeroId || a.targetHeroId === reserveHeroId),
-      );
-    }
-
-    if (swapAction) {
+    if (action) {
       this.finalBattleService.setActionCode('SWAP');
-      this.finalBattleService.selectTarget(swapAction.actionId);
+      this.finalBattleService.selectTarget(action.actionId);
     }
   }
 
