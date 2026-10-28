@@ -87,6 +87,12 @@
   text-transform: uppercase;
 }
 
+.turn-indicator {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .battle-columns {
   display: grid;
   grid-template-columns: minmax(0, 1.125fr) minmax(0, 1fr) minmax(0, 1fr);
