@@ -252,12 +252,6 @@
   gap: 12px;
 }
 
-@media (max-width: 1000px) {
-  .formations-row {
-    grid-template-columns: 1fr;
-  }
-}
-
 .formation {
   display: flex;
   flex-direction: column;
@@ -625,4 +619,149 @@
   letter-spacing: 0.8px;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+@media (max-width: 1400px) and (min-width: 1001px) {
+  :host {
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .battle-page {
+    height: auto;
+    min-height: 100%;
+    max-height: none;
+    overflow-y: visible;
+    padding-bottom: 24px;
+  }
+
+  .battle-workspace {
+    flex: none;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .functional-panel {
+    flex: none;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .battle-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    height: auto;
+    overflow: visible;
+    gap: 16px;
+  }
+
+  .team-column {
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .formations-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .narrative-column {
+    grid-column: 1 / -1;
+    height: 320px;
+    max-height: 350px;
+    overflow: hidden;
+  }
+
+  .panel-heading-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 1000px) {
+  :host {
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .battle-page {
+    height: auto;
+    min-height: 100%;
+    max-height: none;
+    overflow-y: visible;
+    padding-bottom: 30px;
+  }
+
+  .battle-workspace {
+    flex: none;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .functional-panel {
+    flex: none;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .battle-columns {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+    gap: 16px;
+  }
+
+  .team-column {
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .narrative-column {
+    height: 380px;
+    max-height: 420px;
+    overflow: hidden;
+  }
+
+  .formations-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .header-spacer {
+    display: none;
+  }
+
+  .header-action-bar {
+    width: 100%;
+  }
+
+  .panel-heading-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .formations-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .hero-card {
+    padding: 6px 8px;
+  }
+
+  .portrait-cell {
+    width: 48px;
+    height: 62px;
+  }
 }
