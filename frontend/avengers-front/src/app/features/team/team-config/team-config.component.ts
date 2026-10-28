@@ -142,8 +142,7 @@ export class TeamConfigComponent implements OnInit {
     }
 
     const payload: UpdateTeamConfigRequest = {
-      leaderId: config.leaderId,
-      companionIds: config.companionIds ?? [],
+      companionIds: this.heroes.map(h => h.id).filter(id => id !== this.teamId),
       activeHeroIds: activeIds,
       strategy: config.strategy,
     };
@@ -202,8 +201,8 @@ export class TeamConfigComponent implements OnInit {
 
     config.companionIds = [...companions];
 
-    const miembros = [leaderId, ...companions];
-    this.heroes = this.catalogoHeroes.filter((h: HeroItem) => miembros.includes(h.id));
+    const miembrosActuales = [this.teamId, ...companions];
+    this.heroes = this.catalogoHeroes.filter((h: HeroItem) => miembrosActuales.includes(h.id));
   }
 
   cambiarEstrategia(nuevaEstrategia: string): void {

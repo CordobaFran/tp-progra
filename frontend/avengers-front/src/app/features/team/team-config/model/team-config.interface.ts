@@ -20,8 +20,7 @@ export interface TeamConfigResponse { // se pide el dato por metodo http GET
 }
 
 export interface UpdateTeamConfigRequest { // actualizar el Equipo con PUT
-  leaderId?: string;
   companionIds?: string[];
   activeHeroIds: string[];
-  strategy?: string;
+  strategy?: 'AGGRESSIVE' | 'DEFENSIVE' | 'BALANCED' | 'PRAGMATIC' | string;
 }
