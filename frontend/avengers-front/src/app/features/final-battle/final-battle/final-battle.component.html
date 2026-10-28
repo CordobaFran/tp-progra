@@ -140,12 +140,10 @@
                     <span *ngIf="hero.role" class="hero-role">{{ hero.role }}</span>
                     <div class="hero-stats">
                       <span class="stat-energy">
-                        {{ translate('r9.energy') }}: {{ hero.energy ?? 0 }}/{{
-                          hero.maxEnergy ?? 0
-                        }}
+                        {{ translate('r9.energy') }}: {{ hero.energy }}/{{ hero.maxEnergy }}
                       </span>
                       <span class="stat-ap">
-                        {{ translate('r9.ap') }}: {{ hero.ap ?? 0 }}/{{ hero.maxAp ?? 0 }}
+                        {{ translate('r9.ap') }}: {{ hero.ap }}/{{ hero.maxAp }}
                       </span>
                     </div>
                   </div>
@@ -167,8 +165,11 @@
                   *ngFor="let hero of playerSide.reserveHeroes; trackBy: trackByHeroId"
                   class="hero-card reserve-card"
                   [class.knocked-out]="hero.isKnockedOut"
-                  [class.legal-target]="vm.actionCode === 'SWAP' && isLegalTarget(hero.id)"
+                  [class.legal-target]="isLegalTarget(hero.id)"
                   [class.selected]="isReserveSelected(hero.id)"
+                  (click)="
+                    vm.actionCode === 'SWAP' ? onSelectReserveTarget(hero.id) : onSelectHero(hero)
+                  "
                 >
                   <div class="portrait-cell">
                     <img
@@ -285,7 +286,7 @@
                 [class.selected]="vm.selectedActionId === action.actionId"
                 (click)="onSelectLegalAction(action)"
               >
-                <span>{{ action.label }} {{ itemName(action) }}</span>
+                <span *ngIf="action.itemId">{{ itemName(action) }}</span>
                 <span>{{ translate('r9.target') }}: {{ actionTargetName(action) }}</span>
                 <span>{{ translate('r9.cost') }}: {{ action.apCost ?? 0 }}</span>
               </button>
@@ -352,12 +353,10 @@
                     <span class="hero-name">{{ hero.displayName }}</span>
                     <div class="hero-stats">
                       <span class="stat-energy">
-                        {{ translate('r9.energy') }}: {{ hero.energy ?? 0 }}/{{
-                          hero.maxEnergy ?? 0
-                        }}
+                        {{ translate('r9.energy') }}: {{ hero.energy }}/{{ hero.maxEnergy }}
                       </span>
                       <span class="stat-ap">
-                        {{ translate('r9.ap') }}: {{ hero.ap ?? 0 }}/{{ hero.maxAp ?? 0 }}
+                        {{ translate('r9.ap') }}: {{ hero.ap }}/{{ hero.maxAp }}
                       </span>
                     </div>
                   </div>

@@ -149,9 +149,11 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
   isLegalTarget(heroId: string): boolean {
     return this.legalTargetsForSelectedAction.some(
       (action) =>
-        action.targetSide === 'OPPONENT' &&
-        action.targetScope === 'HERO' &&
-        action.targetHeroId === heroId,
+        (action.targetSide === 'OPPONENT' &&
+          action.targetScope === 'HERO' &&
+          action.targetHeroId === heroId) ||
+        (action.actionCode === 'SWAP' &&
+          (action.incomingHeroId === heroId || action.targetHeroId === heroId)),
     );
   }
 
