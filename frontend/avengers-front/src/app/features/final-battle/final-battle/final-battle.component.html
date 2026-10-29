@@ -323,10 +323,26 @@
             <div class="header-spacer" aria-hidden="true"></div>
           </header>
 
-          <article *ngIf="doom as boss" class="functional-panel">
-            <h3>Doctor Doom</h3>
-            <p>{{ translate('r9.energy') }}: {{ boss.currentEnergy }}/{{ boss.maximumEnergy }}</p>
-          </article>
+          <button
+            *ngIf="doom as boss"
+            type="button"
+            class="functional-panel doom-target"
+            [class.selected]="selectedAction?.targetScope === 'ANTAGONIST'"
+            [attr.aria-pressed]="selectedAction?.targetScope === 'ANTAGONIST'"
+            [disabled]="
+              !doomTargetAction ||
+              vm.loading ||
+              vm.submitting ||
+              vm.needsRefresh ||
+              status !== 'ACTIVE'
+            "
+            (click)="onSelectDoomTarget()"
+          >
+            <span class="panel-title">Doctor Doom</span>
+            <span>
+              {{ translate('r9.energy') }}: {{ boss.currentEnergy }}/{{ boss.maximumEnergy }}
+            </span>
+          </button>
 
           <div class="formations-row">
             <div class="formation in-combat">

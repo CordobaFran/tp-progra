@@ -177,6 +177,20 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
     );
   }
 
+  get doomTargetAction(): FinalBattleLegalAction | null {
+    const actions = this.legalTargetsForSelectedAction.filter(
+      (action) => action.targetScope === 'ANTAGONIST',
+    );
+    return actions.length === 1 ? actions[0] : null;
+  }
+
+  onSelectDoomTarget(): void {
+    const action = this.doomTargetAction;
+    if (action) {
+      this.onSelectLegalAction(action);
+    }
+  }
+
   get isTeamActionSelected(): boolean {
     return this.selectedAction?.targetScope === 'TEAM';
   }
