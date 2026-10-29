@@ -67,3 +67,11 @@
 .button {
   justify-self: start;
 }
+
+.event-list > li:last-child > .narrative-event {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  box-shadow:
+    inset 3px 0 0 #38bdf8,
+    0 0 10px rgba(56, 189, 248, 0.2);
+}

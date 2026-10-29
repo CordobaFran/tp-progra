@@ -397,7 +397,7 @@
           </div>
         </section>
         <section class="narrative-column">
-          <div class="narrative-log" #narrativeLog>
+          <div class="narrative-log" #narrativeLog (scroll)="onNarrativeScroll()">
             <app-final-narrative [view]="narrativeView" (retry)="onRefresh()">
             </app-final-narrative>
           </div>

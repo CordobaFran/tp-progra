@@ -21,6 +21,10 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
 
   private previousEventsCount = 0;
 
+  private followNarrative = true;
+
+  private narrativeScrollTop = 0;
+
   constructor(
     private readonly finalBattleService: FinalBattleService,
     private readonly i18nService: I18nService,
@@ -32,10 +36,26 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
   }
 
   ngAfterViewChecked(): void {
+    if (this.vm.loading || this.vm.submitting) {
+      return;
+    }
     const currentCount = this.vm.data?.events?.length ?? 0;
-    if (currentCount > this.previousEventsCount) {
-      this.previousEventsCount = currentCount;
-      this.scrollToBottom();
+    const previousCount = this.previousEventsCount;
+    this.previousEventsCount = currentCount;
+    this.updateNarrativeScroll(
+      currentCount > previousCount
+        ? previousCount === 0
+          ? currentCount - 1
+          : previousCount
+        : null,
+    );
+  }
+
+  onNarrativeScroll(): void {
+    const el = this.narrativeLogContainer?.nativeElement;
+    if (el && !this.vm.loading && !this.vm.submitting) {
+      this.narrativeScrollTop = el.scrollTop;
+      this.followNarrative = el.scrollHeight - el.scrollTop - el.clientHeight <= 24;
     }
   }
 
@@ -347,13 +367,24 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
     this.artwork.useFallback(event);
   }
 
-  private scrollToBottom(): void {
-    if (this.narrativeLogContainer?.nativeElement) {
-      const el = this.narrativeLogContainer.nativeElement;
-      el.scrollTo({
-        top: el.scrollHeight,
-        behavior: 'smooth',
-      });
+  private updateNarrativeScroll(index: number | null): void {
+    const el = this.narrativeLogContainer?.nativeElement;
+    if (!el) {
+      this.previousEventsCount = 0;
+      this.followNarrative = true;
+      this.narrativeScrollTop = 0;
+      return;
     }
+    const entry =
+      index === null ? null : el.querySelectorAll<HTMLElement>('.event-list > li')[index];
+    if (entry && this.followNarrative) {
+      this.narrativeScrollTop =
+        el.scrollTop +
+        entry.getBoundingClientRect().top -
+        el.getBoundingClientRect().top -
+        el.clientTop;
+    }
+    el.scrollTop = this.narrativeScrollTop;
+    this.narrativeScrollTop = el.scrollTop;
   }
 }
