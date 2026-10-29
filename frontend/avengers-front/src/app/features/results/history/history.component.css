@@ -6,7 +6,6 @@
   min-height: 0;
 }
 
-/* Contenedor principal de la página (Mantiene el mismo padding y layout de R1) */
 .history-page {
   display: flex;
   flex-direction: column;
@@ -19,7 +18,6 @@
   overflow: hidden;
 }
 
-/* Cabecera tecnológica de la Feature */
 .history-header {
   flex: 0 0 auto;
   padding-bottom: 8px;
@@ -37,7 +35,6 @@
   margin: 0;
 }
 
-/* Espacio de trabajo dinámico */
 .history-workspace {
   display: flex;
   flex: 1 1 auto;
@@ -67,7 +64,6 @@
   overflow-y: auto;
 }
 
-/* Tabla Estilo Comando de Control de la UTN */
 .student-data-table {
   width: 100%;
   border-collapse: collapse;
@@ -195,8 +191,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  min-height: 180px;
+  min-width: 280px;
+  height: 70vh;
   overflow: hidden;
   border: 2px solid #253648;
   background: linear-gradient(160deg, #0c1828 0%, #070d16 60%, #0a0f1c 100%);
@@ -246,10 +242,12 @@
   flex-direction: column;
   gap: 6px;
   width: 100%;
-  height: 100%;
-  padding: 36px 10px 10px;
+  height: calc(100% - 29px);
+  margin-top: 29px;
+  padding: 10px;
   color: #cbd3df;
   font-size: calc(11px * var(--ui-font-scale));
+  box-sizing: border-box;
 }
 
 .card-interior-content p {
@@ -262,8 +260,10 @@
 }
 
 .scroll-container-box {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 6px;
 }
 
 .scroll-container-box ul {
@@ -290,6 +290,7 @@
   background: #04080e;
   border: 1px solid #101a26;
   font-family: 'Courier New', Courier, monospace;
+  overflow-x: auto;
 }
 
 .telemetry-line {

@@ -49,9 +49,9 @@ export class HistoryService {
 
       const [summary, teams, events, statistics] = await Promise.all(
         [
-          this.game.currentJourney(this.teamId, attemptId),
-          this.game.historyTeamsDetail(this.teamId, attemptId, lang),
-          this.game.historyEventsDetail(this.teamId, attemptId, lang),
+          (await this.game.currentJourney(this.teamId, attemptId)).summary,
+          (await this.game.historyTeamsDetail(this.teamId, attemptId, lang)).teams,
+          (await this.game.historyEventsDetail(this.teamId, attemptId, lang)).events,
           this.game.historyStatistics(this.teamId, attemptId, lang)
         ]
       )
