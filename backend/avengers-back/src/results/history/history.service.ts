@@ -3,6 +3,7 @@ import { ErrorCode } from 'src/basic/error/error-code.enum';
 import { ApiErrorMappingRule, ApiErrorStatusMap, ErrorUtils } from 'src/basic/error/error.utils';
 import { GameFeatureApiService } from 'src/basic/game-feature-api.service';
 import { ApplicationContextService } from 'src/basic/services/application-context.service';
+import { HistoryModel } from './model/history.model';
 
 const HISTORY_API_ERROR_STATUS_MAP: ApiErrorStatusMap = {
   [HttpStatus.NOT_FOUND]: {
@@ -47,21 +48,24 @@ export class HistoryService {
   async getHistoryDetail(attemptId: string, lang:string){
     try {
 
-      const [summary, teams, events, statistics] = await Promise.all(
+      const [summary, teamsResponse, eventsResponse, statistics] = await Promise.all(
         [
-          (await this.game.currentJourney(this.teamId, attemptId)).summary,
-          (await this.game.historyTeamsDetail(this.teamId, attemptId, lang)).teams,
-          (await this.game.historyEventsDetail(this.teamId, attemptId, lang)).events,
-          this.game.historyStatistics(this.teamId, attemptId, lang)
+          this.game.historyJourneyDetail(this.teamId, attemptId, lang),
+          this.game.historyTeamsDetail(this.teamId, attemptId, lang),
+          this.game.historyEventsDetail(this.teamId, attemptId, lang),
+          this.game.historyStatistics(this.teamId, attemptId, lang),
         ]
       )
-      return {
+
+      const result : HistoryModel = {
         attemptId,
         summary,
-        teams,
-        events,
+        teams: teamsResponse.teams,
+        events: eventsResponse.events,
         statistics
       }
+
+      return result;
 
     } catch (error) {
       ErrorUtils.mapGameApiError(

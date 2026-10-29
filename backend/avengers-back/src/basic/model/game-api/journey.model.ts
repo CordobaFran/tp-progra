@@ -60,7 +60,7 @@ export interface JourneyHistoryItemApi {
 }
 
 //AGREGADO R13
-interface HistoryEventsApi {
+export interface HistoryEventsApi {
   sequence: number;
   eventCode: string;
   stageCode: StageCodeStrategy;
@@ -97,7 +97,7 @@ export interface JourneyHistoryEventsApi {
 }
 
 export interface JourneyHistoryStatisticsApi {
-  attempId: string;
+  attemptId: string;
   status: string;
   completionOutcome: "VICTORY" | "DEFEAT" | "ABANDON";
   competition:{
