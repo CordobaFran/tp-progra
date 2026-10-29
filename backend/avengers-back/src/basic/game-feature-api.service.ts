@@ -177,7 +177,7 @@ export class GameFeatureApiService {
   async historyStatistics(teamId: string, attemptId: string, lang: string) {
     const statistic = await this.api.get<JourneyHistoryStatisticsApi>(`/teams/${teamId}/journeys/${attemptId}/statistics`, { lang })
     return {
-      attemptId: statistic.attempId,
+      attemptId: statistic.attemptId,
       status: statistic.status,
       completionOutcome: statistic.completionOutcome,
       competition: statistic.competition
