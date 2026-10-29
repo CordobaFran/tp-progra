@@ -170,11 +170,25 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
     return this.legalTargetsForSelectedAction.some(
       (action) =>
         (action.targetSide === 'OPPONENT' &&
-          action.targetScope === 'HERO' &&
-          action.targetHeroId === heroId) ||
+          (action.targetScope === 'TEAM' ||
+            (action.targetScope === 'HERO' && action.targetHeroId === heroId))) ||
         (action.actionCode === 'SWAP' &&
           (action.incomingHeroId === heroId || action.targetHeroId === heroId)),
     );
+  }
+
+  get doomTargetAction(): FinalBattleLegalAction | null {
+    const actions = this.legalTargetsForSelectedAction.filter(
+      (action) => action.targetScope === 'ANTAGONIST',
+    );
+    return actions.length === 1 ? actions[0] : null;
+  }
+
+  onSelectDoomTarget(): void {
+    const action = this.doomTargetAction;
+    if (action) {
+      this.onSelectLegalAction(action);
+    }
   }
 
   get isTeamActionSelected(): boolean {
@@ -293,8 +307,8 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
     const action = this.legalTargetsForSelectedAction.find(
       (entry) =>
         entry.targetSide === 'OPPONENT' &&
-        entry.targetScope === 'HERO' &&
-        entry.targetHeroId === heroId,
+        (entry.targetScope === 'TEAM' ||
+          (entry.targetScope === 'HERO' && entry.targetHeroId === heroId)),
     );
     if (action) {
       this.finalBattleService.selectTarget(action.actionId);
