@@ -170,8 +170,8 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
     return this.legalTargetsForSelectedAction.some(
       (action) =>
         (action.targetSide === 'OPPONENT' &&
-          action.targetScope === 'HERO' &&
-          action.targetHeroId === heroId) ||
+          (action.targetScope === 'TEAM' ||
+            (action.targetScope === 'HERO' && action.targetHeroId === heroId))) ||
         (action.actionCode === 'SWAP' &&
           (action.incomingHeroId === heroId || action.targetHeroId === heroId)),
     );
@@ -307,8 +307,8 @@ export class FinalBattleComponent implements OnInit, AfterViewChecked {
     const action = this.legalTargetsForSelectedAction.find(
       (entry) =>
         entry.targetSide === 'OPPONENT' &&
-        entry.targetScope === 'HERO' &&
-        entry.targetHeroId === heroId,
+        (entry.targetScope === 'TEAM' ||
+          (entry.targetScope === 'HERO' && entry.targetHeroId === heroId)),
     );
     if (action) {
       this.finalBattleService.selectTarget(action.actionId);
